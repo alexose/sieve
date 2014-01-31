@@ -6,10 +6,10 @@ var port = process.argv && process.argv.length > 2 ? process.argv[2] : 3008;
 
 http.createServer(function(request, response) {
 
-  console.log('Server running on port ' + port);
-
   var data = '';
-  if (request.method == 'POST'){
+  if (request.url === '/'){
+    explain(request, response);
+  } else if (request.method == 'POST'){
 
     // Prevent overflow
     request.on('data', function(d) {
@@ -30,7 +30,6 @@ http.createServer(function(request, response) {
   } else {
 
     // Assume params are urlencoded
-    
     go(request, response, data);
 
     console.log(data);
@@ -39,21 +38,20 @@ http.createServer(function(request, response) {
     response.end();
   }
 
-
-  go(request, response);
-
-}).listen(port);
+}).listen(port, function(){
+  console.log('Server running on port ' + port);
+});
 
 // Manpage  
-function explain(response){
+function explain(request, response){
   
-  response.writeHead(200, {"Content-Type": "text/plain"});
-
   fs.readFile('README.md', 'utf8', function (err,data) {
     if (err) {
       return console.log(err);
     }
-    response.write("Sieve:  the API for your API.");
+
+    response.writeHead(200, {"Content-Type": "text/plain"});
+    response.write(data);
     response.end();
   });
 
