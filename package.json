@@ -1,5 +1,7 @@
 {
-  "dependencies": {
-    "request": "~2.33.0"
-  }
+  "name": "sieve",
+  "description": "Turns any API into a client-side API."
+  "author": "Alexander Ose <alex@alexose.com>",
+  "dependencies": {},
+  "engine": "node >= 0.10.17"
 }
