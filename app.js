@@ -1,12 +1,14 @@
 var http = require("http")
+  , fs = require("fs")
   , querystring = require("querystring");
 
-var port = process.argv && process.argv.length > 2 ? process.argv[3] : 3008;
+var port = process.argv && process.argv.length > 2 ? process.argv[2] : 3008;
 
 http.createServer(function(request, response) {
-  
+
   console.log('Server running on port ' + port);
- 
+
+  var data = '';
   if (request.method == 'POST'){
 
     // Prevent overflow
@@ -26,6 +28,13 @@ http.createServer(function(request, response) {
     });
 
   } else {
+
+    // Assume params are urlencoded
+    
+    go(request, response, data);
+
+    console.log(data);
+
     response.writeHead(405, {'Content-Type': 'text/plain'});
     response.end();
   }
@@ -37,25 +46,23 @@ http.createServer(function(request, response) {
 
 // Manpage  
 function explain(response){
+  
   response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write("Sieve:  the API for your API.");
-  response.end();
+
+  fs.readFile('README.md', 'utf8', function (err,data) {
+    if (err) {
+      return console.log(err);
+    }
+    response.write("Sieve:  the API for your API.");
+    response.end();
+  });
+
 }
 
 // Main sieve-ing logic
-function go(response, json){
+function go(request, response, json){
 
   response.writeHead(200, {"Content-Type": "text/plain"});
   response.write(json);
   response.end();
-}
-
-// POST processing and hardening
-function post(request, response, callback) {
-  var data = "";
-
-  if(typeof(callback) !== 'function'){
-    return null;
-  }
-
 }
