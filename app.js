@@ -1,4 +1,5 @@
 var http = require("http")
+  , url = require("url")
   , fs = require("fs")
   , querystring = require("querystring");
 
@@ -23,9 +24,9 @@ http.createServer(function(request, response) {
     request.on('end', function(){
       new Sieve(response, data);
     });
-  } 
-
-  explain(request, response);
+  } else { 
+    explain(request, response);
+  }
 
 }).listen(port, function(){
   console.log('Server running on port ' + port);
@@ -48,19 +49,33 @@ function explain(request, response){
 Sieve = function(response, data){
 
   this.response = response;
-
+  
   // TODO: Create account for IP?
   this.json = this.parse(data);
 
-  this.json.urls.forEach(this.fetch.bind(this));
-  
-  response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write(json);
-  response.end();
+  var urls = this.json.urls;
+
+  // TODO: Something more clever than forEach
+  var results = []; 
+  urls.forEach(
+    this.fetch.bind(this, accumulate)
+  );
+ 
+  function accumulate(result, pos){
+
+    // Add result to array
+    results.push([result, pos]);
+    
+    // Check to see if we've accumulated all the results we need
+    if (results.length === urls.length){
+      response.writeHead(200, {"Content-Type": "text/plain"});
+      response.write('yay');
+      response.end();
+    }
+  }
 };
 
 Sieve.prototype.parse = function(data){
-  console.log(data);
   try {
     return JSON.parse(data);
   } catch(e){
@@ -68,9 +83,37 @@ Sieve.prototype.parse = function(data){
   }
 }
 
-Sieve.prototype.fetch = function(url){
-  console.log(url);
-}
+Sieve.prototype.fetch = function(cb, string, pos){
+  var a = url.parse(string); 
+
+  var options = {
+    host : a.hostname,
+    port : a.port,
+    path : a.pathname
+  };
+
+  try {
+    var req = http.request(options, function(response){
+      var data = '';
+      response.on('data', function(d){
+        data += d;
+      });
+
+      response.on('end', function(){
+        cb(data, pos); 
+      });
+    }).on("error", function(e){
+      throw e; 
+    });
+
+  req.end();
+
+  } catch(e){
+    this.error(e);
+  }
+
+  return;
+};
 
 Sieve.prototype.error = function(error){
   var response = this.response;
