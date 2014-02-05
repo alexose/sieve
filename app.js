@@ -6,12 +6,10 @@ var port = process.argv && process.argv.length > 2 ? process.argv[2] : 3008;
 
 http.createServer(function(request, response) {
 
-  var data = '';
-  if (request.url === '/'){
-    explain(request, response);
-  } else if (request.method == 'POST'){
+  if (request.method == 'POST'){
 
     // Prevent overflow
+    var data = '';
     request.on('data', function(d) {
       data += d;
       if(data.length > 1e6) {
@@ -20,23 +18,14 @@ http.createServer(function(request, response) {
         request.connection.destroy();
       }
     });
-
+  
     // Handle successful post
-    request.on('end', function() {
-      data = querystring.parse(data);
-      go(request, response, data);
+    request.on('end', function(){
+      new Sieve(response, data);
     });
+  } 
 
-  } else {
-
-    // Assume params are urlencoded
-    go(request, response, data);
-
-    console.log(data);
-
-    response.writeHead(405, {'Content-Type': 'text/plain'});
-    response.end();
-  }
+  explain(request, response);
 
 }).listen(port, function(){
   console.log('Server running on port ' + port);
@@ -54,13 +43,39 @@ function explain(request, response){
     response.write(data);
     response.end();
   });
-
 }
 
-// Main sieve-ing logic
-function go(request, response, json){
+Sieve = function(response, data){
 
+  this.response = response;
+
+  // TODO: Create account for IP?
+  this.json = this.parse(data);
+
+  this.json.urls.forEach(this.fetch.bind(this));
+  
   response.writeHead(200, {"Content-Type": "text/plain"});
   response.write(json);
+  response.end();
+};
+
+Sieve.prototype.parse = function(data){
+  console.log(data);
+  try {
+    return JSON.parse(data);
+  } catch(e){
+    this.error(e);
+  }
+}
+
+Sieve.prototype.fetch = function(url){
+  console.log(url);
+}
+
+Sieve.prototype.error = function(error){
+  var response = this.response;
+
+  response.writeHead(500, {"Content-Type": "text/plain"});
+  response.write(error.toString());
   response.end();
 }
