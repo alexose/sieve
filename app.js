@@ -79,6 +79,12 @@ Sieve = function(response, data){
   }
 };
 
+Sieve.prototype.defaults = {
+  headers : {
+    "User-Agent" : "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)"
+  }
+}
+
 Sieve.prototype.parse = function(data){
   try {
     var json = JSON.parse(data);
@@ -103,13 +109,21 @@ Sieve.prototype.validate = function(json){
 }
 
 Sieve.prototype.fetch = function(cb, entry, pos){
+  
   var a = url.parse(entry.url);
 
-  console.log(a);
+  // Override default headers with user-specified headers
+  var headers = JSON.parse(JSON.stringify(this.defaults.headers));
+
+  for (var key in entry.headers){
+    headers[key] = entry.headers[key]; 
+  }
+
   var options = {
     host : a.hostname,
-    port : 443,
-    path : a.pathname
+    port : a.port,
+    path : a.pathname,
+    headers : headers 
   };
 
   var method = a.protocol == "https:" ? https : http; 
