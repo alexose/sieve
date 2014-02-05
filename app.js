@@ -70,6 +70,11 @@ Sieve = function(response, data){
     // Check to see if we've accumulated all the results we need
     if (results.length === arr.length){
 
+      // Re-order results array to match original request
+      results.sort(function(a, b){
+        return a[1] > b[2] ? -1 : 1;
+      })
+
       var string = JSON.stringify(results);
 
       response.writeHead(200, {"Content-Type": "text/plain"});
