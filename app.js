@@ -50,7 +50,7 @@ Sieve = function(response, data){
 
   this.response = response;
   
-  // TODO: Create account for IP?
+  // TODO: Authentication
   this.json = this.parse(data);
 
   var urls = this.json.urls;
