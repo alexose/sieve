@@ -18,13 +18,13 @@ All Sieve requests are made by POSTing raw JSON:
 
 	[
 		{
-			url : 'https://api.github.com/repos/alexose/sieve/commits',
-			method : 'POST',
-			fill : ''
+			"url" : "https://api.github.com/repos/alexose/sieve/commits",
+			"method" : "POST",
+			"fill" : ""
 		},
 		{
-			url : 'https://api.github.com/repos/alexose/sieve/branches',
-			method : 'POST',
-			fill : ''
-		},
+			"url" : "https://api.github.com/repos/alexose/sieve/branches",
+			"method" : "POST",
+			"fill" : ""
+		}
 	]

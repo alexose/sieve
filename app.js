@@ -1,4 +1,5 @@
 var http = require("http")
+  , https = require("https")
   , url = require("url")
   , fs = require("fs")
   , querystring = require("querystring");
@@ -53,11 +54,11 @@ Sieve = function(response, data){
   // TODO: Authentication
   this.json = this.parse(data);
 
-  var urls = this.json.urls;
+  var arr = this.json;
 
   // TODO: Something more clever than forEach
   var results = []; 
-  urls.forEach(
+  arr.forEach(
     this.fetch.bind(this, accumulate)
   );
  
@@ -67,9 +68,12 @@ Sieve = function(response, data){
     results.push([result, pos]);
     
     // Check to see if we've accumulated all the results we need
-    if (results.length === urls.length){
+    if (results.length === arr.length){
+
+      var string = JSON.stringify(results);
+
       response.writeHead(200, {"Content-Type": "text/plain"});
-      response.write('yay');
+      response.write(string);
       response.end();
     }
   }
@@ -77,23 +81,41 @@ Sieve = function(response, data){
 
 Sieve.prototype.parse = function(data){
   try {
+    var json = JSON.parse(data);
+
+    if (this.validate(json)){
+      return json;
+    }
+
     return JSON.parse(data);
   } catch(e){
     this.error(e);
   }
 }
 
-Sieve.prototype.fetch = function(cb, string, pos){
-  var a = url.parse(string); 
+Sieve.prototype.validate = function(json){
 
+  if (!json.length){
+    throw new Error('No URLs given.');
+  }
+
+  return json;
+}
+
+Sieve.prototype.fetch = function(cb, entry, pos){
+  var a = url.parse(entry.url);
+
+  console.log(a);
   var options = {
     host : a.hostname,
-    port : a.port,
+    port : 443,
     path : a.pathname
   };
 
+  var method = a.protocol == "https:" ? https : http; 
+
   try {
-    var req = http.request(options, function(response){
+    var req = method.request(options, function(response){
       var data = '';
       response.on('data', function(d){
         data += d;
