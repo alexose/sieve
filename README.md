@@ -9,7 +9,7 @@ Sieve is a general-purpose middleman to help you write client-side applications 
 	* Provides methods for using XPath
 	* Makes writing tests easy and automatic
 
-Sieve is provided as a node module and has no external dependencies.  It's probably not something you want to use in production, though.  Not yet.
+Sieve is provided as a node module and only has one dependency.  It's probably not something you want to use in production, though.  Not yet.
 
 Usage
 -----
@@ -23,12 +23,12 @@ All Sieve requests are made by POSTing raw JSON:
 			"headers" : {
 				"User-Agent" : "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
 			},
-			"fill" : ""
+			"selector" : ".commit .date"
 		},
 		{
 			"url" : "https://api.github.com/repos/alexose/sieve/branches",
 			"method" : "POST",
-			"fill" : ""
+			"selector" : ".name"
 		}
 	]
 
