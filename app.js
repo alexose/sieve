@@ -62,51 +62,55 @@ Sieve = function(response, data, functionName){
   this.json = this.parse(data);
 
   var arr = this.json
-    , self = this;
+    , results = []
+    , accumulate = this.accumulate.bind(this, results);
 
   // TODO: Something more clever than forEach
-  var results = []; 
-  arr.forEach(
-    this.fetch.bind(this, accumulate)
-  );
- 
-  function accumulate(result, entry, pos){
+  if (arr && arr.length){
+    arr.forEach(
+      this.fetch.bind(this, accumulate) 
+    );
+  }
+}
 
-    // Attempt to apply selector 
-    if (entry.selector){
+Sieve.prototype.accumulate = function (results, result, entry, pos){
 
-      try {
-        var json = JSON.parse(result);
-        result = jsonselect.match(entry.selector, json);
-      } catch(e){
-        self.error(e);
-      }
+  // Attempt to apply selector 
+  if (entry.selector){
+
+    try {
+      var json = JSON.parse(result);
+      result = jsonselect.match(entry.selector, json);
+    } catch(e){
+      this.error(e);
+    }
+  }
+
+  // Add result to array
+  results.push([result, pos]);
+  
+  // Check to see if we've accumulated all the results we need
+  if (results.length === this.json.length){
+
+    // Re-order results array to match original request
+    results.sort(function(a, b){
+      return a[1] > b[1] ? 1 : -1;
+    })
+
+    var string = JSON.stringify(results)
+      , type = "text/plain"
+      , name = this.functionName;
+
+    if (name){
+      type = "application/x-javascript"
+      string = name + '(' + string + ')';
     }
 
-    // Add result to array
-    results.push([result, pos]);
-    
-    // Check to see if we've accumulated all the results we need
-    if (results.length === arr.length){
+    var response = this.response;
 
-      // Re-order results array to match original request
-      results.sort(function(a, b){
-        return a[1] > b[1] ? 1 : -1;
-      })
-
-      var string = JSON.stringify(results)
-        , type = "text/plain"
-        , name = self.functionName;
-
-      if (name){
-        type = "application/x-javascript"
-        string = name + '(' + string + ')';
-      }
-
-      response.writeHead(200, { "Content-Type" : type });
-      response.write(string);
-      response.end();
-    }
+    response.writeHead(200, { "Content-Type" : type });
+    response.write(string);
+    response.end();
   }
 };
 
@@ -123,8 +127,6 @@ Sieve.prototype.parse = function(data){
     if (this.validate(json)){
       return json;
     }
-
-    return JSON.parse(data);
   } catch(e){
     this.error(e);
   }
@@ -134,9 +136,10 @@ Sieve.prototype.validate = function(json){
 
   if (!json.length){
     throw new Error('No URLs given.');
+    return false;
   }
 
-  return json;
+  return true;
 }
 
 Sieve.prototype.fetch = function(cb, entry, pos){
@@ -183,6 +186,7 @@ Sieve.prototype.fetch = function(cb, entry, pos){
 };
 
 Sieve.prototype.error = function(error){
+
   var response = this.response;
 
   response.writeHead(500, {"Content-Type": "text/plain"});
