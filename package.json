@@ -2,5 +2,8 @@
   "name": "sieve",
   "description": "Turns any API into a client-side API.",
   "author": "Alexander Ose <alex@alexose.com>",
-  "engine": "node >= 0.10.17"
+  "engine": "node >= 0.10.17",
+  "dependencies": {
+    "JSONSelect": "~0.4.0"
+  }
 }
