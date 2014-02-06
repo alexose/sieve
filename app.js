@@ -2,7 +2,8 @@ var http = require("http")
   , https = require("https")
   , url = require("url")
   , fs = require("fs")
-  , querystring = require("querystring");
+  , querystring = require("querystring")
+  , jsonpath = require("JSONPath");
 
 var port = process.argv && process.argv.length > 2 ? process.argv[2] : 3008;
 
@@ -62,7 +63,18 @@ Sieve = function(response, data){
     this.fetch.bind(this, accumulate)
   );
  
-  function accumulate(result, pos){
+  function accumulate(result, entry, pos){
+
+    // Attempt to select JSONPath
+    if (entry.jsonpath){
+
+      try {
+        var json = JSON.parse(result);
+        result = jsonpath.eval(json, entry.jsonpath);
+      } catch(e){
+        this.error(e);
+      }
+    }
 
     // Add result to array
     results.push([result, pos]);
@@ -72,7 +84,7 @@ Sieve = function(response, data){
 
       // Re-order results array to match original request
       results.sort(function(a, b){
-        return a[1] > b[2] ? -1 : 1;
+        return a[1] > b[1] ? 1 : -1;
       })
 
       var string = JSON.stringify(results);
@@ -141,7 +153,7 @@ Sieve.prototype.fetch = function(cb, entry, pos){
       });
 
       response.on('end', function(){
-        cb(data, pos); 
+        cb.call(this, data, entry, pos); 
       });
     }).on("error", function(e){
       throw e; 
