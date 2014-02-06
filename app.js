@@ -86,33 +86,54 @@ Sieve.prototype.accumulate = function (results, result, entry, pos){
     }
   }
 
-  // Add result to array
-  results.push([result, pos]);
+  // Run "then" instruction on each result
+  // TODO: Should this be breadth first?
+  // TODO: Support $1, $2, et.
+  if (entry.then){
+
+    console.log(result.length);
+    //this.fetch(cb, entry, pos)
   
-  // Check to see if we've accumulated all the results we need
-  if (results.length === this.json.length){
+  } else {
+    add.call(this);
+  }
 
-    // Re-order results array to match original request
-    results.sort(function(a, b){
-      return a[1] > b[1] ? 1 : -1;
-    })
+  // Add result to array
+  function add(){
+    
+    results.push([result, pos]);
+  
+    // Check to see if we've accumulated all the results we need
+    if (results.length === this.json.length){
 
-    var string = JSON.stringify(results)
-      , type = "text/plain"
-      , name = this.functionName;
-
-    if (name){
-      type = "application/x-javascript"
-      string = name + '(' + string + ')';
+      // Re-order results array to match original request
+      results.sort(function(a, b){
+        return a[1] > b[1] ? 1 : -1;
+      })
+    
+      this.finish(results);
     }
-
-    var response = this.response;
-
-    response.writeHead(200, { "Content-Type" : type });
-    response.write(string);
-    response.end();
   }
 };
+
+// Return results
+Sieve.prototype.finish = function(results){
+    
+  var string = JSON.stringify(results)
+    , type = "text/plain"
+    , name = this.functionName;
+
+  if (name){
+    type = "application/x-javascript"
+    string = name + '(' + string + ')';
+  }
+
+  var response = this.response;
+
+  response.writeHead(200, { "Content-Type" : type });
+  response.write(string);
+  response.end();
+}
 
 Sieve.prototype.defaults = {
   headers : {
