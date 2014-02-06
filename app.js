@@ -27,9 +27,25 @@ http.createServer(function(request, response) {
 
       // Suport JSONP
       var queries = querystring.parse(request.url.split('?')[1])
-        , functionName = queries.callback || null;
+        , name = queries.callback || null;
 
-      new Sieve(response, data, functionName);
+      new Sieve(data, finish);
+
+      function finish(results){
+          
+        var string = JSON.stringify(results)
+          , type = "text/plain";
+
+        if (name){
+          type = "application/x-javascript"
+          string = name + '(' + string + ')';
+        }
+
+        response.writeHead(200, { "Content-Type" : type });
+        response.write(string);
+        response.end();
+      }
+
     });
   } else { 
     explain(request, response);
@@ -53,43 +69,21 @@ function explain(request, response){
   });
 }
 
-Sieve = function(response, data, functionName){
+Sieve = function(data, cb){
 
-  this.response = response;
-  this.functionName = functionName;
-  
   // TODO: Authentication
+ 
   this.json = this.parse(data);
+  this.callback = cb;
+  this.results = [];
 
   var arr = this.json
-    , results = []
-    , accumulate = this.accumulate.bind(this, results, this.finish);
+    , fetch = this.fetch.bind(this);
 
   // TODO: Something more clever than forEach
   if (arr && arr.length){
-    arr.forEach(
-      this.fetch.bind(this, accumulate) 
-    );
+    arr.forEach(fetch);
   }
-}
-
-// Return results
-Sieve.prototype.finish = function(results){
-    
-  var string = JSON.stringify(results)
-    , type = "text/plain"
-    , name = this.functionName;
-
-  if (name){
-    type = "application/x-javascript"
-    string = name + '(' + string + ')';
-  }
-
-  var response = this.response;
-
-  response.writeHead(200, { "Content-Type" : type });
-  response.write(string);
-  response.end();
 }
 
 Sieve.prototype.defaults = {
@@ -120,8 +114,10 @@ Sieve.prototype.validate = function(json){
   return true;
 }
 
-Sieve.prototype.fetch = function(cb, entry, pos){
+Sieve.prototype.fetch = function(entry, pos){
   
+  var self = this;
+
   var a = url.parse(entry.url);
 
   // Override default headers with user-specified headers
@@ -141,20 +137,21 @@ Sieve.prototype.fetch = function(cb, entry, pos){
   var method = a.protocol == "https:" ? https : http; 
 
   try {
-    var req = method.request(options, function(response){
-      var data = '';
+    var request = method.request(options, function(response){
+      var result = '';
       response.on('data', function(d){
-        data += d;
+        result += d;
       });
 
       response.on('end', function(){
-        cb.call(this, data, entry, pos); 
+        self.accumulate.call(self, entry, result, pos);
       });
+
     }).on("error", function(e){
       throw e; 
     });
 
-  req.end();
+  request.end();
 
   } catch(e){
     this.error(e);
@@ -163,7 +160,7 @@ Sieve.prototype.fetch = function(cb, entry, pos){
   return;
 };
 
-Sieve.prototype.accumulate = function (results, result, entry, pos, cb){
+Sieve.prototype.accumulate = function (entry, result, pos){
 
   // Attempt to apply selector 
   if (entry.selector){
@@ -207,7 +204,9 @@ Sieve.prototype.accumulate = function (results, result, entry, pos, cb){
 
   // Add result to array
   function add(){
-    
+  
+    var results = this.results;
+
     results.push([result, pos]);
   
     // Check to see if we've accumulated all the results we need
@@ -218,7 +217,7 @@ Sieve.prototype.accumulate = function (results, result, entry, pos, cb){
         return a[1] > b[1] ? 1 : -1;
       });
     
-      cb(results);
+      this.callback(results);
     }
   }
 };
