@@ -72,7 +72,7 @@ function explain(request, response){
 Sieve = function(data, cb){
 
   // TODO: Authentication
- 
+
   this.json = this.parse(data);
   this.callback = cb;
   this.results = [];
@@ -174,38 +174,33 @@ Sieve.prototype.accumulate = function (entry, result, pos){
   }
 
   // Run "then" instruction on each result
-  // TODO: Should this be breadth first?
   if (entry.then){
 
     if (result.length){
 
-      var newResults = []
-        , fetch = this.fetch.bind(this)
-        , cb = this.accumulate.bind(this);
+      var cb = add.bind(this); 
 
       result.forEach(function(d,i){
          
         // TODO: Better cloning
-        var entry = JSON.parse(JSON.stringify(entry.then));
+        var then = JSON.parse(JSON.stringify(entry.then));
         
         // TODO: Support $1, $2, etc.
-        entry.url = entry.url.replace('$1', d);
+        then.url = then.url.replace('$1', d);
 
-        // Fetch & accumulate
-        fetch(cb, entry, i);
-
+        new Sieve(JSON.stringify([then]), function(results){
+          console.log(results); 
+        }); 
       });
 
     }
   
   } else {
-    add.call(this);
+    add.call(this, this.results);
   }
 
   // Add result to array
-  function add(){
-  
-    var results = this.results;
+  function add(results){
 
     results.push([result, pos]);
   
