@@ -63,7 +63,7 @@ Sieve = function(response, data, functionName){
 
   var arr = this.json
     , results = []
-    , accumulate = this.accumulate.bind(this, results);
+    , accumulate = this.accumulate.bind(this, results, this.finish);
 
   // TODO: Something more clever than forEach
   if (arr && arr.length){
@@ -72,49 +72,6 @@ Sieve = function(response, data, functionName){
     );
   }
 }
-
-Sieve.prototype.accumulate = function (results, result, entry, pos){
-
-  // Attempt to apply selector 
-  if (entry.selector){
-
-    try {
-      var json = JSON.parse(result);
-      result = jsonselect.match(entry.selector, json);
-    } catch(e){
-      this.error(e);
-    }
-  }
-
-  // Run "then" instruction on each result
-  // TODO: Should this be breadth first?
-  // TODO: Support $1, $2, et.
-  if (entry.then){
-
-    console.log(result.length);
-    //this.fetch(cb, entry, pos)
-  
-  } else {
-    add.call(this);
-  }
-
-  // Add result to array
-  function add(){
-    
-    results.push([result, pos]);
-  
-    // Check to see if we've accumulated all the results we need
-    if (results.length === this.json.length){
-
-      // Re-order results array to match original request
-      results.sort(function(a, b){
-        return a[1] > b[1] ? 1 : -1;
-      })
-    
-      this.finish(results);
-    }
-  }
-};
 
 // Return results
 Sieve.prototype.finish = function(results){
@@ -205,6 +162,67 @@ Sieve.prototype.fetch = function(cb, entry, pos){
 
   return;
 };
+
+Sieve.prototype.accumulate = function (results, result, entry, pos, cb){
+
+  // Attempt to apply selector 
+  if (entry.selector){
+
+    try {
+      var json = JSON.parse(result);
+      result = jsonselect.match(entry.selector, json);
+    } catch(e){
+      this.error(e);
+    }
+  }
+
+  // Run "then" instruction on each result
+  // TODO: Should this be breadth first?
+  if (entry.then){
+
+    if (result.length){
+
+      var newResults = []
+        , fetch = this.fetch.bind(this)
+        , cb = this.accumulate.bind(this);
+
+      result.forEach(function(d,i){
+         
+        // TODO: Better cloning
+        var entry = JSON.parse(JSON.stringify(entry.then));
+        
+        // TODO: Support $1, $2, etc.
+        entry.url = entry.url.replace('$1', d);
+
+        // Fetch & accumulate
+        fetch(cb, entry, i);
+
+      });
+
+    }
+  
+  } else {
+    add.call(this);
+  }
+
+  // Add result to array
+  function add(){
+    
+    results.push([result, pos]);
+  
+    // Check to see if we've accumulated all the results we need
+    if (results.length === this.json.length){
+
+      // Re-order results array to match original request
+      results.sort(function(a, b){
+        return a[1] > b[1] ? 1 : -1;
+      });
+    
+      cb(results);
+    }
+  }
+};
+
 
 Sieve.prototype.error = function(error){
 
