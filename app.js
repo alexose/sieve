@@ -24,7 +24,12 @@ http.createServer(function(request, response) {
   
     // Handle successful post
     request.on('end', function(){
-      new Sieve(response, data);
+
+      // Suport JSONP
+      var queries = querystring.parse(request.url.split('?')[1])
+        , functionName = queries.callback || null;
+
+      new Sieve(response, data, functionName);
     });
   } else { 
     explain(request, response);
@@ -48,9 +53,10 @@ function explain(request, response){
   });
 }
 
-Sieve = function(response, data){
+Sieve = function(response, data, functionName){
 
   this.response = response;
+  this.functionName = functionName;
   
   // TODO: Authentication
   this.json = this.parse(data);
@@ -66,7 +72,7 @@ Sieve = function(response, data){
  
   function accumulate(result, entry, pos){
 
-    // Attempt to select JSONPath
+    // Attempt to apply selector 
     if (entry.selector){
 
       try {
@@ -88,9 +94,16 @@ Sieve = function(response, data){
         return a[1] > b[1] ? 1 : -1;
       })
 
-      var string = JSON.stringify(results);
+      var string = JSON.stringify(results)
+        , type = "text/plain"
+        , name = self.functionName;
 
-      response.writeHead(200, {"Content-Type": "text/plain"});
+      if (name){
+        type = "application/x-javascript"
+        string = name + '(' + string + ')';
+      }
+
+      response.writeHead(200, { "Content-Type" : type });
       response.write(string);
       response.end();
     }
