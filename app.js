@@ -190,17 +190,18 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       var then = JSON.parse(JSON.stringify(entry.then));
       
       // TODO: Support $1, $2, etc.
+      then.selection = d;
       then.url = then.url.replace('$1', d);
 
       entries.push(then);
     });
       
     new Sieve(JSON.stringify(entries), function(results){
-      cb({ result : results });
+      cb(results);
     });
 
   } else {
-    add.call(this, { result : result });
+    add.call(this, result);
   }
 
   // Add result to array
@@ -208,6 +209,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
     var obj = {
       result : result,
+      selection : entry.selection,
       pos : pos
     };
 
@@ -221,10 +223,10 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         return a.pos > b.pos ? 1 : -1;
       });
 
-      // Remove "pos" attrs and escape from object
-      var results = arr.map(function(d){ return d.result });
+      // Remove "pos" attrs
+      var results = arr.forEach(function(d){ delete d.pos });
    
-      this.callback(results);
+      this.callback(arr);
     } 
   }
 };
