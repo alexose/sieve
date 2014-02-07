@@ -73,9 +73,11 @@ Sieve = function(data, cb){
 
   // TODO: Authentication
 
-  this.json = this.parse(data);
   this.callback = cb;
   this.results = [];
+  this.json = this.parse(data);
+
+  this.urls = this.json.length;
 
   var arr = this.json
     , fetch = this.fetch.bind(this);
@@ -131,7 +133,8 @@ Sieve.prototype.fetch = function(entry, pos){
     host : a.hostname,
     port : a.port,
     path : a.pathname,
-    headers : headers 
+    headers : headers,
+    auth : a.auth
   };
 
   var method = a.protocol == "https:" ? https : http; 
@@ -178,7 +181,8 @@ Sieve.prototype.accumulate = function (entry, result, pos){
   // Run "then" instruction on each result
   if (entry.then && result.length){
 
-    var cb = add.bind(this);
+    var cb = add.bind(this)
+      , entries = [];
 
     result.forEach(function(d,i){
      
@@ -188,39 +192,44 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       // TODO: Support $1, $2, etc.
       then.url = then.url.replace('$1', d);
 
-      new Sieve(JSON.stringify([then]), function(results){
-        cb([d, results]);
-      });
+      entries.push(then);
+    });
+      
+    new Sieve(JSON.stringify(entries), function(results){
+      cb({ result : results });
     });
 
   } else {
-    add.call(this, result);
+    add.call(this, { result : result });
   }
 
   // Add result to array
   function add(result){
 
-    arr.push([result, pos]);
-  
+    var obj = {
+      result : result,
+      pos : pos
+    };
+
+    arr.push(obj);
+    
     // Check to see if we've accumulated all the results we need
-    if (arr.length === this.json.length){
+    if (arr.length === this.urls){
 
       // Re-order results array to match original request
       arr.sort(function(a, b){
-        return a[1] > b[1] ? 1 : -1;
+        return a.pos > b.pos ? 1 : -1;
       });
-    
-      this.callback(arr);
-    }
+
+      // Remove "pos" attrs and escape from object
+      var results = arr.map(function(d){ return d.result });
+   
+      this.callback(results);
+    } 
   }
 };
 
 
 Sieve.prototype.error = function(error){
-
-  var response = this.response;
-
-  response.writeHead(500, {"Content-Type": "text/plain"});
-  response.write(error.toString());
-  response.end();
+  this.callback(error.toString());
 }
