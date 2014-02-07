@@ -2,8 +2,7 @@ var http = require("http")
   , https = require("https")
   , url = require("url")
   , fs = require("fs")
-  , querystring = require("querystring")
-  , jsonselect = require("JSONSelect");
+  , querystring = require("querystring");
 
 var port = process.argv && process.argv.length > 2 ? process.argv[2] : 3008;
 
@@ -163,23 +162,121 @@ Sieve.prototype.fetch = function(entry, pos){
   return;
 };
 
+// Attempt to apply selector
+Sieve.prototype.select = function(corpus, selector, engine){
+
+  // Assume jsonselect unless otherwise specified
+  engine = engine || 'jsonselect';
+
+  var result = this.select[engine].call(this, corpus, selector);
+
+  return result;
+}
+
+// JSONSelect plugin
+Sieve.prototype.select.jsonselect = function(corpus, selector){
+
+  var engine = require('JSONSelect')
+    , command = 'match';
+
+  try {
+    var json = JSON.parse(corpus);
+    return engine[command](selector, json);
+  } catch(e){
+    this.error(e);
+  }
+
+  return corpus.selector;
+}
+
+// Default Xpath plugin
+Sieve.prototype.select.xpath = function(corpus, selector){
+
+  var engine = require('xpath')
+    , command = 'select';
+
+  var jsdom = require("jsdom").jsdom
+    , doc = jsdom(corpus);
+      
+  // Now that we have a valid document, let's use xpath on it. 
+  try {
+    var result = engine[command](selector, doc)
+      , text = result.map(getText);
+
+    return text; 
+  } catch(e){
+    this.error(e);
+  }
+
+  // Attempt to extract text from node
+  function getText(node){
+
+    var children = node._childNodes
+      , value = node.__nodeValue || ""
+      , output = "";
+
+    if (children && children.length){
+      for (var i in children){
+        output += getText(children[i]);
+      }
+    }
+
+    return output += value;
+  }
+}
+
+// Xpath plugin with htmlparser2
+// TODO: Implement Domutils as well?
+Sieve.prototype.select.xpath_htmlparser2 = function(corpus, selector){
+
+  var engine = require('xpath')
+    , command = 'select'
+    , error = this.error.bind(this)
+    , dom
+    , htmlparser = require('htmlparser2')
+    , handler = new htmlparser.DomHandler(go)
+    , parser = new htmlparser.Parser(handler);
+  
+  // Even though this is a callback, it's actually synchronous
+  function go(e, _dom){
+    if (e){
+      error(e);
+    } else {
+      dom = _dom;
+    }
+  }
+  parser.write(corpus);
+  parser.done();
+
+  // Trying jsdom too
+  var jsdom = require("jsdom").jsdom;
+
+  var doc = jsdom(corpus);
+      
+  // Now that we have a valid DOM, let's use xpath on it. 
+  try {
+    var result = engine[command](selector, doc);
+  
+    console.log(result);
+
+    return result.toString();
+  } catch(e){
+    error(e);
+  }
+
+
+}
+
 Sieve.prototype.accumulate = function (entry, result, pos){
 
-  // Attempt to apply selector 
   if (entry.selector){
-
-    try {
-      var json = JSON.parse(result);
-      result = jsonselect.match(entry.selector, json);
-    } catch(e){
-      this.error(e);
-    }
+     result = this.select(result, entry.selector, entry.engine);
   }
 
   var arr = this.results;
 
   // Run "then" instruction on each result
-  if (entry.then && result.length){
+  if (entry.then && result && result.length){
 
     var cb = add.bind(this)
       , entries = [];
@@ -233,5 +330,13 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
 
 Sieve.prototype.error = function(error){
-  this.callback(error.toString());
+
+  var type = typeof(error);
+
+  if (type === 'object'){
+    this.callback(error.toString());
+  } else if (type === 'string'){
+    this.callback(error);
+  }
+
 }
