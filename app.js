@@ -173,46 +173,44 @@ Sieve.prototype.accumulate = function (entry, result, pos){
     }
   }
 
+  var arr = this.results;
+
   // Run "then" instruction on each result
-  if (entry.then){
+  if (entry.then && result.length){
 
-    if (result.length){
+    var cb = add.bind(this);
 
-      var cb = add.bind(this); 
+    result.forEach(function(d,i){
+     
+      // TODO: Better cloning
+      var then = JSON.parse(JSON.stringify(entry.then));
+      
+      // TODO: Support $1, $2, etc.
+      then.url = then.url.replace('$1', d);
 
-      result.forEach(function(d,i){
-         
-        // TODO: Better cloning
-        var then = JSON.parse(JSON.stringify(entry.then));
-        
-        // TODO: Support $1, $2, etc.
-        then.url = then.url.replace('$1', d);
-
-        new Sieve(JSON.stringify([then]), function(results){
-          console.log(results); 
-        }); 
+      new Sieve(JSON.stringify([then]), function(results){
+        cb([d, results]);
       });
+    });
 
-    }
-  
   } else {
-    add.call(this, this.results);
+    add.call(this, result);
   }
 
   // Add result to array
-  function add(results){
+  function add(result){
 
-    results.push([result, pos]);
+    arr.push([result, pos]);
   
     // Check to see if we've accumulated all the results we need
-    if (results.length === this.json.length){
+    if (arr.length === this.json.length){
 
       // Re-order results array to match original request
-      results.sort(function(a, b){
+      arr.sort(function(a, b){
         return a[1] > b[1] ? 1 : -1;
       });
     
-      this.callback(results);
+      this.callback(arr);
     }
   }
 };
