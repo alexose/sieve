@@ -131,7 +131,7 @@ Sieve.prototype.fetch = function(entry, pos){
   var options = {
     host : a.hostname,
     port : a.port,
-    path : a.pathname,
+    path : a.path,
     headers : headers,
     auth : a.auth
   };
@@ -257,8 +257,6 @@ Sieve.prototype.select.xpath_htmlparser2 = function(corpus, selector){
   try {
     var result = engine[command](selector, doc);
   
-    console.log(result);
-
     return result.toString();
   } catch(e){
     error(e);
