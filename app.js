@@ -94,17 +94,20 @@ Sieve = function(data, cb){
 
   this.callback = cb;
   this.results = [];
-  this.json = this.parse(data);
 
-  this.urls = this.json.length;
+  this.parse(data, function(json){
 
-  var arr = this.json
-    , fetch = this.fetch.bind(this);
+    this.urls = json.length;
 
-  // TODO: Something more clever than forEach
-  if (arr && arr.length){
-    arr.forEach(fetch);
-  }
+    var arr = json
+      , fetch = this.fetch.bind(this);
+
+    // TODO: Something more clever than forEach
+    if (arr && arr.length){
+      arr.forEach(fetch);
+    }
+
+  }.bind(this));
 }
 
 Sieve.prototype.defaults = {
@@ -113,12 +116,12 @@ Sieve.prototype.defaults = {
   }
 }
 
-Sieve.prototype.parse = function(data){
+Sieve.prototype.parse = function(data, cb){
   try {
     var json = JSON.parse(data);
 
     if (this.validate(json)){
-      return json;
+      cb(json);
     }
   } catch(e){
     this.error(e);
@@ -353,6 +356,8 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
 
 Sieve.prototype.error = function(error){
+
+  console.trace();
 
   var type = typeof(error);
 
