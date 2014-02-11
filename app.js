@@ -183,68 +183,72 @@ Sieve.prototype.fetch = function(entry, pos){
 };
 
 // Attempt to apply selector
-Sieve.prototype.select = function(corpus, selector, engine){
+Sieve.prototype.select = function(corpus, selector, engine, cb){
 
   // Assume jsonselect unless otherwise specified
   engine = engine || 'jsonselect';
 
-  var result = this.select[engine].call(this, corpus, selector);
-
-  return result;
+  try{
+    var result = this.select[engine].call(this, corpus, selector, cb);
+  } catch(e){
+    this.error(e);
+  }
 }
 
 // JSONSelect plugin
-Sieve.prototype.select.jsonselect = function(corpus, selector){
+Sieve.prototype.select.jsonselect = function(corpus, selector, cb){
 
   var engine = require('JSONSelect')
     , command = 'match';
 
   try {
     var json = JSON.parse(corpus);
-    return engine[command](selector, json);
+    cb(engine[command](selector, json));
   } catch(e){
     this.error(e);
   }
-
-  return corpus.selector;
 }
 
 // Default Xpath plugin
-Sieve.prototype.select.xpath = function(corpus, selector){
+Sieve.prototype.select.xpath = function(corpus, selector, cb){
 
   var engine = require('xpath')
     , command = 'select';
 
-  var jsdom = require("jsdom").jsdom
-    , doc = jsdom(corpus);
-      
-  // Now that we have a valid document, let's use xpath on it. 
-  try {
-    
-    var result = engine[command](selector, doc)
+  var jsdom = require('jsdom');
 
-    // If the selector ends in "@something", we're extracting values.  Otherwise, just text.
-    var value = selector.split('/').pop().indexOf('@') === 0
-      , arr = [];
+  jsdom.env(corpus, function(errors, window){
+  
+    // Now that we have a valid document, let's use xpath on it. 
+    try {
 
-    if (value){
-      result.forEach(function(d){
-        arr.push(d.value);
-      });
-    } else {
-      result.forEach(function(d){
-        arr.push(d.toString());
-      });
+      var result = engine[command](selector, window.document)
+
+      // If the selector ends in "@something", we're extracting values.  Otherwise, just text.
+      var value = selector.split('/').pop().indexOf('@') === 0
+        , arr = [];
+
+      console.log(result);
+      if (value){
+        result.forEach(function(d){
+          arr.push(d.value);
+        });
+      } else {
+        result.forEach(function(d){
+          arr.push(d.toString());
+        });
+      }
+     
+      cb(arr); 
+    } catch(e){
+      this.error(e);
     }
-    return arr; 
-  } catch(e){
-    this.error(e);
-  }
+  }.bind(this));
 }
 
 // Xpath plugin with htmlparser2
 // TODO: Implement Domutils as well?
-Sieve.prototype.select.xpath_htmlparser2 = function(corpus, selector){
+Sieve.prototype.select.xpath_htmlparser2 = function(corpus, selector, cb){
 
   var engine = require('xpath')
     , command = 'select'
@@ -274,73 +278,77 @@ Sieve.prototype.select.xpath_htmlparser2 = function(corpus, selector){
   try {
     var result = engine[command](selector, doc);
   
-    return result.toString();
+    cb(result.toString());
   } catch(e){
     error(e);
   }
-
-
 }
 
 Sieve.prototype.accumulate = function (entry, result, pos){
 
   if (entry.selector){
-     result = this.select(result, entry.selector, entry.engine);
-  }
-
-  var arr = this.results;
-
-  // Run "then" instruction on each result
-  if (entry.then && result && result.length){
-
-    var cb = add.bind(this)
-      , entries = [];
-
-    result.forEach(function(d,i){
-     
-      // TODO: Better cloning
-      var then = JSON.parse(JSON.stringify(entry.then));
-      
-      // TODO: Support $1, $2, etc.
-      then.selection = d;
-      then.url = then.url.replace('$1', d);
-
-      entries.push(then);
-    });
-      
-    new Sieve(JSON.stringify(entries), function(results){
-      cb(results);
-    });
-
+     result = this.select(result, entry.selector, entry.engine, selected.bind(this));
   } else {
-    add.call(this, result);
+    selected.call(this, result);
   }
 
-  // Add result to array
-  function add(result){
+  function selected(result){
 
-    var obj = {
-      result : result,
-      selection : entry.selection,
-      pos : pos
-    };
+    var arr = this.results;
 
-    arr.push(obj);
-    
-    // Check to see if we've accumulated all the results we need
-    if (arr.length === this.urls){
+    // Run "then" instruction on each result
+    if (entry.then && result && result.length){
 
-      // Re-order results array to match original request
-      arr.sort(function(a, b){
-        return a.pos > b.pos ? 1 : -1;
+      var cb = add.bind(this)
+        , entries = [];
+
+      result.forEach(function(d,i){
+       
+        // TODO: Better cloning
+        var then = JSON.parse(JSON.stringify(entry.then));
+        
+        // TODO: Support $1, $2, etc.
+        then.selection = d;
+        then.url = then.url.replace('$1', d);
+
+        entries.push(then);
+      });
+        
+      new Sieve(JSON.stringify(entries), function(results){
+        cb(results);
       });
 
-      // Remove "pos" attrs
-      var results = arr.forEach(function(d){ delete d.pos });
-   
-      this.callback(arr);
-    } 
+    } else {
+      add.call(this, result);
+    }
+  
+    // Add result to array
+    function add(result){
+
+      var obj = {
+        result : result,
+        selection : entry.selection,
+        pos : pos
+      };
+
+      arr.push(obj);
+      
+      // Check to see if we've accumulated all the results we need
+      if (arr.length === this.urls){
+
+        // Re-order results array to match original request
+        arr.sort(function(a, b){
+          return a.pos > b.pos ? 1 : -1;
+        });
+
+        // Remove "pos" attrs
+        var results = arr.forEach(function(d){ delete d.pos });
+     
+        this.callback(arr);
+      } 
+    }
   }
+
 };
 
 
