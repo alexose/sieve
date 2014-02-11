@@ -61,9 +61,9 @@ http.createServer(function(request, response) {
     var string = JSON.stringify(results)
       , type = "text/plain";
 
-    if (queries.name){
+    if (queries.callback){
       type = "application/x-javascript"
-      string = queries.name + '(' + string + ')';
+      string = queries.callback + '(' + string + ')';
     }
 
     response.writeHead(200, { "Content-Type" : type });
@@ -220,28 +220,25 @@ Sieve.prototype.select.xpath = function(corpus, selector){
       
   // Now that we have a valid document, let's use xpath on it. 
   try {
+    
     var result = engine[command](selector, doc)
-      , text = result.map(getText);
 
-    return text; 
+    // If the selector ends in "@something", we're extracting values.  Otherwise, just text.
+    var value = selector.split('/').pop().indexOf('@') === 0
+      , arr = [];
+
+    if (value){
+      result.forEach(function(d){
+        arr.push(d.value);
+      });
+    } else {
+      result.forEach(function(d){
+        arr.push(d.toString());
+      });
+    }
+    return arr; 
   } catch(e){
     this.error(e);
-  }
-
-  // Attempt to extract text from node
-  function getText(node){
-
-    var children = node._childNodes
-      , value = node.__nodeValue || ""
-      , output = "";
-
-    if (children && children.length){
-      for (var i in children){
-        output += getText(children[i]);
-      }
-    }
-
-    return output += value;
   }
 }
 
