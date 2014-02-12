@@ -7,6 +7,7 @@
     "JSONSelect": "~0.4.0",
     "xpath": "0.0.5",
     "htmlparser2": "~3.4.0",
-    "jsdom": "~0.10.0"
+    "jsdom": "~0.10.0",
+    "memory-cache": "0.0.5"
   }
 }
