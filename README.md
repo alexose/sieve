@@ -4,15 +4,10 @@ Sieve
 Sieve makes any resource on the web available to your client-side application.  It serves many purposes:
 
 * Acts as a proxy for APIs that don't support JSONP
-* Simplifies excessively verbose responses using JSONSelect 
+* Simplifies excessively verbose responses using selectors (JSONSelect, Xpath, etc.) 
 * Combines multiple HTTP requests into one
 
-And soon:
-
-* Provides methods for using XPath
-* Makes writing tests easy and automatic
-
-Sieve is provided as a node module and only has one dependency.  It's probably not something you want to use in production, though.  Not yet.
+Sieve is provided as a node module and has very minimal dependencies.  It's probably not something you want to use in production, though.  Not yet.
 
 Usage
 -----
@@ -40,17 +35,17 @@ You can then POST the request directly to the Sieve server:
 
 Which will log the following data to the console:
 
-   {
-      "result":[
-         "2014-02-12T18:19:31Z",
-         "2014-02-12T18:19:31Z",
-         "2014-02-12T15:36:45Z",
-         "2014-02-12T15:36:45Z",
-         "2014-02-12T15:00:53Z"
-      ]
-   }
+    {
+        "result":[
+            "2014-02-12T18:19:31Z",
+            "2014-02-12T18:19:31Z",
+            "2014-02-12T15:36:45Z",
+            "2014-02-12T15:36:45Z",
+            "2014-02-12T15:00:53Z"
+        ]
+    }
 
-If your access control policy is particularly restricture, don't worry!  You can also put provide the JSON as a URL parameter:
+If your access control policy is particularly restrictive, don't worry!  You can also put provide the JSON as a base64-encoded URL parameter. It sounds crazy, but it's actually not so bad in practice:
 
     var string = btoa(JSON.stringify(json));
 
