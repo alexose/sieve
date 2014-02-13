@@ -72,7 +72,7 @@ Advanced
 
 You can specify any headers you like in the "headers" object.
 
-    var json = {
+    var request = {
             "url" : "https://api.github.com/repos/alexose/sieve/commits",
             "headers" : {
                 "Accept-Language" : "en-US,en;q=0.8,es;q=0.6",
@@ -87,7 +87,7 @@ By default, Sieve will introduce a WebKit user-agent header.  If you wish to ove
 
 You can also provide an array of requests in a single query:
 
-    var json = [
+    var request = [
         {
             "url" : "https://api.github.com/repos/alexose/sieve/commits",
             "method" : "POST",
@@ -106,7 +106,7 @@ You can also provide an array of requests in a single query:
 
 Sieve only supports basic HTTP authentication as a URL parameter:
 
-    var json = [
+    var request = [
             {
                 "url" : "https://user:password@api.github.com/repos/alexose/sieve/commits"
             }
