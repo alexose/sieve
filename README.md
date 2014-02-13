@@ -40,17 +40,15 @@ You can then POST the request directly to the Sieve server:
 
 Which will log the following data to the console:
 
-    [
-       {
-          "result":[
-             "2014-02-12T18:19:31Z",
-             "2014-02-12T18:19:31Z",
-             "2014-02-12T15:36:45Z",
-             "2014-02-12T15:36:45Z",
-             "2014-02-12T15:00:53Z"
-          ]
-       }
-    ]    
+   {
+      "result":[
+         "2014-02-12T18:19:31Z",
+         "2014-02-12T18:19:31Z",
+         "2014-02-12T15:36:45Z",
+         "2014-02-12T15:36:45Z",
+         "2014-02-12T15:00:53Z"
+      ]
+   }
 
 If your access control policy is particularly restricture, don't worry!  You can also put provide the JSON as a URL parameter:
 
