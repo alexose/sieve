@@ -86,19 +86,43 @@ By default, Sieve will introduce a WebKit user-agent header.  If you wish to ove
 You can also provide an array of requests in a single query:
 
     var request = [
-        {
-            "url" : "https://api.github.com/repos/alexose/sieve/commits",
-            "method" : "POST",
-            "headers" : {
-                "User-Agent" : "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
+            {
+                "url" : "https://api.github.com/repos/alexose/sieve/commits",
+                "method" : "POST",
+                "headers" : {
+                    "User-Agent" : "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
+                },
+                "selector" : ".commit .date"
             },
-            "selector" : ".commit .date"
-        },
-        {
-            "url" : "https://api.github.com/repos/alexose/sieve/branches",
-            "method" : "POST",
-            "selector" : ".name"
-        }
+            {
+                "url" : "https://api.github.com/repos/alexose/sieve/branches",
+                "method" : "POST",
+                "selector" : ".name"
+            }
+        ];
+     
+Sieve will wait until each request is finished resolving before returning an array of its own:
+
+    [
+        {
+            "result": [
+                "2014-02-13T18:58:13Z",
+                "2014-02-13T18:58:13Z",
+                "2014-02-12T18:19:31Z",
+                "2014-02-12T18:19:31Z",
+                "2014-02-12T15:36:45Z",
+            ]
+        },
+        {
+            "result": [
+                "cf63b8f67a1efe122d14b96e5465f1ac759d8481",
+                "abd17c144a63fed0010d18e6e4ce814c61793a0b",
+                "6191988fabe62dc8ab5224fa407e9ca1e6a66a3b",
+                "6191988fabe62dc8ab5224fa407e9ca1e6a66a3b",
+                "1a40540b00ab42cb07b038efcc1ef150f0446865"
+            ]
+        }
+    ]
 
 ### Authentication ###
 
