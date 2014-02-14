@@ -76,6 +76,16 @@ You can specify any headers you like in the "headers" object.
 
 By default, Sieve will introduce a WebKit user-agent header.  If you wish to override the user-agent header, you can include 'User-Agent' among your headers, as noted above.
 
+### Authentication ###
+
+Sieve only supports basic HTTP authentication as a URL parameter:
+
+    var request = [
+            {
+                "url" : "https://user:password@api.github.com/repos/alexose/sieve/commits"
+            }
+        ];
+
 ### Combining multiple queries ###
 
 You can also provide an array of requests in a single query:
@@ -83,7 +93,6 @@ You can also provide an array of requests in a single query:
     var request = [
             {
                 "url" : "https://api.github.com/repos/alexose/sieve/commits",
-                "method" : "POST",
                 "headers" : {
                     "User-Agent" : "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
                 },
@@ -91,7 +100,6 @@ You can also provide an array of requests in a single query:
             },
             {
                 "url" : "https://api.github.com/repos/alexose/sieve/branches",
-                "method" : "POST",
                 "selector" : ".name"
             }
         ];
@@ -110,29 +118,58 @@ Sieve will wait until each request is finished resolving before returning an arr
         },
         {
             "result": [
-                "cf63b8f67a1efe122d14b96e5465f1ac759d8481",
-                "abd17c144a63fed0010d18e6e4ce814c61793a0b",
-                "6191988fabe62dc8ab5224fa407e9ca1e6a66a3b",
-                "6191988fabe62dc8ab5224fa407e9ca1e6a66a3b",
-                "1a40540b00ab42cb07b038efcc1ef150f0446865"
-            ]
+                "async_selectors",
+                "master",
+                "then",
+                "xpath"
+            ]
         }
     ]
 
-### Authentication ###
+### Combining multiple selectors ###
 
-Sieve only supports basic HTTP authentication as a URL parameter:
+Even though most selector engines provide ways to combine multiple queries, it can be helpful to run separate queries and receive separate results.  Sieve provides a way to do just that without having to make multiple HTTP requests:
 
-    var request = [
-            {
-                "url" : "https://user:password@api.github.com/repos/alexose/sieve/commits"
+    var request = {   
+            "url" : "https://api.github.com/repos/alexose/sieve/commits",
+            "selector" : {
+                "dates" : ".commit .date",
+                "shas" : ".sha"
             }
-        ];
+        }
 
+Which will yield:
 
-### Nested Requests ###
+    {
+        "result": {
+            "dates": [
+                "2014-02-13T20:41:14Z",
+                "2014-02-13T20:41:14Z",
+                "2014-02-13T20:37:29Z",
+                "2014-02-13T20:37:29Z",
+                "2014-02-13T20:28:16Z"
+            ],
+            "shas": [
+                "e3d89e43bdc3c3a4e2dd17195880391fdea86c77",
+                "4d399f06e90442e85e02bc7f2603fb6edf7404aa",
+                "731a266b6598e3018ccea88bcfb94b4876ef93d1",
+                "731a266b6598e3018ccea88bcfb94b4876ef93d1",
+                "0ecb46e3ff3098ea2e5c4540d4a62a718b07cc12"
+            ]
+        }
+    }
 
-### URL Templating ###
+### Nested Requests & Templating ###
+
+Here's where things start to get a little crazy:  You can use the results from a keyed selector object (see "Combining Multiple Selectors") to query even more URLs:
+
+    var request = {   
+            "url" : "https://api.github.com/repos/alexose/sieve/commits",
+            "selector" : {
+                "dates" : ".commit .date",
+                "shas" : ".sha"
+            }
+        }
 
 ### Iteration ###
 
