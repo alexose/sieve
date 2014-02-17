@@ -136,7 +136,7 @@ Even though most selector engines provide ways to combine multiple queries, it c
                 "dates" : ".commit .date",
                 "shas" : ".sha"
             }
-        }
+        };
 
 Which will yield:
 
@@ -163,14 +163,48 @@ Which will yield:
 
 Here's where things start to get a little crazy:  You can use the results from a keyed selector object (see "Combining Multiple Selectors") to query even more URLs:
 
-    var request = {   
-            "url" : "https://api.github.com/repos/alexose/sieve/commits",
+    var request = { 
+            "url" : "https://api.github.com/users/alexose/repos",
+            "method" : "GET",
             "selector" : {
-                "dates" : ".commit .date",
-                "shas" : ".sha"
+                "name" : ":nth-child(-n+4) .name"
+            },
+            "then" : {
+                "url" : "https://api.github.com/repos/alexose/{{name}}/commits",
+                "selector" : ".date"
             }
         }
 
-### Iteration ###
+Which will yield:
 
-### Streamlining ###
+    {
+        "result": [
+            {
+                "result": [
+                    "2012-05-06T18:12:27Z",
+                    "2012-05-06T18:12:27Z",
+                    "2012-05-06T16:28:57Z",
+                    "2012-05-06T16:28:57Z",
+                    "2012-05-06T15:47:47Z"
+                ]
+            },
+            {
+                "result": [
+                    "2012-11-12T19:05:45Z",
+                    "2012-11-12T19:05:45Z",
+                    "2012-11-12T15:37:39Z",
+                    "2012-11-12T15:37:39Z",
+                    "2012-11-12T15:21:01Z"
+                ]
+            },
+            {
+                "result": [
+                    "2013-02-13T03:43:52Z",
+                    "2013-02-13T03:43:52Z",
+                    "2013-02-13T02:44:44Z",
+                    "2013-02-13T02:44:44Z",
+                    "2013-02-13T02:19:04Z"
+                ]
+            }
+        ]
+    }
