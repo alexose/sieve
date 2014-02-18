@@ -1,3 +1,5 @@
+require('look').start();
+
 var http = require("http")
   , https = require("https")
   , url = require("url")
