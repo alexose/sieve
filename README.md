@@ -159,7 +159,59 @@ Which will yield:
         }
     }
 
-### Nested Requests & Templating ###
+### Templating ###
+
+A common use for web scrapers is to access a range of related URLs.  In Sieve, this can be achieved by either providing an array of entries (see "Combining multiple entries"), or a URL template.  Sieve uses a mustache-esque format for its templates:
+
+    var request = {   
+            "url" : "https://api.github.com/repos/alexose/{{repo}}/commits",
+            "data" : {
+                "repo" : ["sieve", "pomodoro", "photodump"]
+            },
+            "selector" : ".commit .date"
+        };
+
+Which will yield:
+
+    [
+        {
+            "result": [
+                "2014-02-18T19:17:08Z",
+                "2014-02-18T19:17:08Z",
+                "2014-02-18T16:59:34Z",
+                "2014-02-18T16:59:34Z",
+            ]
+        },
+        {
+            "result": [
+                "2013-12-03T18:13:14Z",
+                "2013-12-03T18:13:14Z"
+            ]
+        },
+        {
+            "result": [
+                "2013-05-12T16:52:06Z",
+                "2013-05-12T16:52:06Z",
+                "2013-05-12T16:11:22Z",
+                "2013-05-12T16:11:22Z",
+                "2013-05-12T02:53:41Z",
+            ]
+        }
+    ]
+
+You can also pass any ES5-compatible functions in the "data" object.  Sieve will evaluate them and use their return value:
+        
+    // Return the first 120 ratings
+    var request = {
+        "url" : "http://www.yelp.com/biz/clover-cambridge-5/?start={{num}}",
+        "data" : {
+            "num" : function(){var a=[]; for(var i=0;i<=120;i+=40){ a.push(i) }; return a;} 
+        },
+        "engine" : "xpath",
+        "selector" : "//meta[@itemprop="ratingValue"]/@content" 
+    }
+
+### Nested Requests ###
 
 Here's where things start to get a little crazy:  You can use the results from a keyed selector object (see "Combining Multiple Selectors") to query even more URLs:
 
