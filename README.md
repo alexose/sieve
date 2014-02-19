@@ -199,18 +199,6 @@ Which will yield:
         }
     ]
 
-You can also pass any ES5-compatible functions in the "data" object.  Sieve will evaluate them and use their return value:
-        
-    // Return the first 120 ratings
-    var request = {
-        "url" : "http://www.yelp.com/biz/clover-cambridge-5/?start={{num}}",
-        "data" : {
-            "num" : function(){var a=[]; for(var i=0;i<=120;i+=40){ a.push(i) }; return a;} 
-        },
-        "engine" : "xpath",
-        "selector" : "//meta[@itemprop="ratingValue"]/@content" 
-    }
-
 ### Nested Requests ###
 
 Here's where things start to get a little crazy:  You can use the results from a keyed selector object (see "Combining Multiple Selectors") to query even more URLs:
