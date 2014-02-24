@@ -52,9 +52,9 @@ http.createServer(function(request, response) {
   }
 
   function error(string){
-      response.writeHead(200, { "Content-Type" : 'text' });
-      response.write(string);
-      response.end();
+    response.writeHead(200, { "Content-Type" : 'text' });
+    response.write(string);
+    response.end();
   }
       
   function finish(results){
@@ -75,16 +75,24 @@ http.createServer(function(request, response) {
   console.log('Server running on port ' + port);
 });
 
-// Manpage  
 function explain(request, response){
-  
-  fs.readFile('README.md', 'utf8', function (err,data) {
-    if (err) {
-      return console.log(err);
-    }
 
-    response.writeHead(200, {"Content-Type": "text/plain"});
-    response.write(data);
-    response.end();
-  });
+  // Load HTML template
+  fs.readFile('index.html', 'utf8', template)
+
+  function template(err, html){
+    fs.readFile('README.md', 'utf8', function(err, markdown){
+      
+      // Render README.md
+      var marked = require('marked')
+        , docs = marked(markdown);
+
+      // Insert into template
+      html = html.replace('{{docs}}', docs);
+
+      response.writeHead(200, {"Content-Type": "text/html"});
+      response.write(html);
+      response.end();
+    });
+  }
 }

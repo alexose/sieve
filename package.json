@@ -8,6 +8,7 @@
     "xpath": "0.0.5",
     "htmlparser2": "~3.4.0",
     "jsdom": "~0.10.0",
-    "memory-cache": "0.0.5"
+    "memory-cache": "0.0.5",
+    "marked": "~0.3.1"
   }
 }
