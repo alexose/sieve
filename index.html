@@ -2,94 +2,43 @@
   <head>
     <title>Sieve</title>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
   </head>
   <body>
       <div class="container">
           {{docs}}
       </div>
-      <div id="demo"></div>
   </body>
-  <style>
-    #demo{
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      font-size: 18px;
-      color: #fff;
-      height: 3em;
-      background: #333;
-      box-shadow: 0 0 100px rgba(0,0,0,0.6);
-    }
-
-    #demo .container .handle{
-      padding: 1em;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    #demo .container textarea{
-      height: 20em;
-      width: 50%;
-      background: #333;
-      border: 1px solid;
-    }
-
-    #demo .container button{
-      margin: 1em 0;
-      color: #fff;
-      background: #333;
-      border: 1px solid #999;
-      border-radius: 10px;
-    }
-  </style>
   <script type="text/javascript">
 
-(function($){
-$(document).ready(function(){
+if (typeof(console) !== "undefined"){
 
-    var element = $('#demo');
+}
 
-    var container = $('<div />')
-      .addClass('container')
-      .appendTo(element);
+var server = 'http://alexose.com:3008';
 
-    // Handle
-    $('<div />')
-      .addClass('handle')
-      .text('Try it!')
-      .click(handler)
-      .appendTo(container);
-    
-    // Sandbox
-    $('<textarea />')
-      .appendTo(container);
+var tutorial = [
+    [
+        "    _____              \n",
+        "  / __(_)__ _  _____   \n",
+        " _\\ \\/ / -_) |/ / -_)\n",
+        "/___/_/\\__/|___/\\__/ \n",
+        "                       \n",
+        "Welcome to Sieve!\n\n",
+        "We've already set up a few variables for you.\n\n",
+        "To continue, type \"more()\""
+    ],
+    [
+        "More." 
+    ],
+];
 
-    // Console
-    $('<textarea />')
-      .prop('readonly', true)
-      .appendTo(container);
+var pos = 0;
 
-    // Button
-    $('<button />')
-      .text('Submit')
-      .appendTo(container);
-
-    var originalHeight = element.height();
-
-    function handler(){
-        var cname = "expanded";
-
-        element.animate({ 
-          height : $(this).hasClass(cname) ? originalHeight : container.height()
-        }, 200);
-
-        $(this).toggleClass(cname);
-    }
-
-});
-})(jQuery);
+function more(){
+  console.log.apply(console, tutorial[pos]);
+  pos++;
+}
+more();
 
   </script>
 </html>
