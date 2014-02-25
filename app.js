@@ -3,7 +3,7 @@ var http = require("http")
   , url = require("url")
   , fs = require("fs")
   , querystring = require("querystring")
-  , Sieve = require("./lib/sieve");
+  , Sieve = require("sieve");
 
 var port = process.argv && process.argv.length > 2 ? process.argv[2] : 3008;
 
