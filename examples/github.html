@@ -55,7 +55,7 @@ $('#go').click(function(e){
 
     // Send request to Sieve using our clever GET technique
     var str = btoa(JSON.stringify(request));
-    $.getJSON(server + '?callback=?', str, finish);
+    $.getJSON(server + '?callback=?', { json : str }, finish);
 
     // Do something with response
     function finish(data){
