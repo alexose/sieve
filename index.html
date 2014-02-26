@@ -1,0 +1,173 @@
+<html>
+  <head>
+    <title>Sieve</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+     
+    <div class="navbar navbar-default navbar-static-top" role="navigation">
+      <div class="container">
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#docs">Docs</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="home" class="container">
+      <div class="jumbotron">
+        <h1>Sieve</h1>
+        <p>Sieve makes any resource on the web available to your client-side application. It serves many purposes:</p>
+        <ul>
+          <li>Acts as a proxy for APIs that don't support JSONP</li>
+          <li>Simplifies excessively verbose responses using selectors (JSONSelect, Xpath, etc.)</li>
+          <li>Combines multiple HTTP requests into one</li>
+        </ul>
+      </div>
+      <div class="alert alert-info"><b>Try it!</b>  Open up your DevTools console to get started.</div>
+    </div>
+
+    <div id="docs" class="container">
+    </div>
+
+  </body>
+  <script type="text/javascript">
+
+if (typeof(console) !== "undefined"){
+
+}
+
+var tutorial = [
+    [
+        "    _____              ",
+        "  / __(_)__ _  _____   ",
+        " _\\ \\/ / -_) |/ / -_)",
+        "/___/_/\\__/|___/\\__/ ",
+        "                       ",
+        "Welcome to the Sieve tutorial!",
+        "",
+        "To get you started, we've already set up a few variables:",
+        "",
+        "    server",
+        "    post",
+        "",
+        "To continue, type \"more()\""
+    ],
+    [
+        "Sieve requests begin as JSON objects with the following layout:",
+        "",
+        "    var request = {",
+        "        \"url\" : \"https://api.github.com/repos/alexose/sieve/commits\",",
+        "        \"selector\" : \".commit .author .date\"",
+        "    };",
+        "",
+        "(We've set this variable up for you as well.)",
+        "",
+        "Let's POST this request to the server.  Try typing the following:",
+        "",
+        "    post(server, request);",
+        "",
+        "Note that you can always return to the previous step by typing \"last()\"!"
+    ],
+    [
+        "Great!  You retrieved the dates of each commit for this project.",
+        "",
+        "Pretty easy, right? You can see how this would easy this would make it to get data into your client-side application.",
+        "",
+        "Now let's try something a little more complicated.  Type more() to continue."
+    ],
+    [
+        "It's often helpful to combine multiple pieces of information.",
+        "Sieve allows you to specify multiple selectors in a single request, like so:",
+        "",
+        "    request = {",
+        "        \"url\" : \"https://api.github.com/repos/alexose/sieve/commits\",",
+        "        \"selector\" : {",
+        "            \"date\" : \".commit .date\",",
+        "            \"message\" : \".commit .message\"",
+        "        }",
+        "    };",
+        "",
+        "Now let's POST it to the server by typing the following:",
+        "",
+        "    post(server, request);"
+    ],
+    [
+        "Perfect.",
+        "",
+        "You might have noticed how fast that response was-- That's because Sieve automatically caches HTTP requests.",
+        "",
+        "Type more() to continue."
+    ],
+    [   
+        "But what if the site we're interested in doesn't return JSON?  Then what?",
+        "",
+        "Using different types of selectors is easy.  Try this:",
+        "",
+        "    request = {",
+        "        \"url\" : \"https://www.google.com/finance\",",
+        "        \"selector\" : \"//table[@id='sfe-mktsumm']/tbody/tr[1]/td\"",
+        "    };",
+    ],
+    [
+        "Perfect.  You just retrieved the current value of the Dow Jones Industrial from Google Finance."  
+    ],
+];
+
+var server = 'http://alexose.com:3008';
+
+var post = function(server, request){
+
+    request = JSON.stringify(request);
+
+    $.post(server, request)
+        .success(function(response){
+            console.log(response);
+            more();
+        })
+        .error(function(response){
+            console.log(response);
+        });
+
+    return "POSTing to server...";
+};
+
+var pos = 0;
+
+var request = { "url" : "https://api.github.com/repos/alexose/sieve/commits", "selector" : ".commit .date" };
+
+var more = function(){
+    var text = tutorial[pos].map(function(d){ return d + "\n"; });
+
+    if (pos){
+        text.unshift('\n Step ' + pos + ' of ' + (tutorial.length - 1) + ':\n\n');
+    }
+
+    console.log.apply(console, text);
+    pos++;
+
+    return '';
+}
+more();
+
+var last = function(){
+    pos--;
+    more();
+}
+  </script>
+</html>
+
