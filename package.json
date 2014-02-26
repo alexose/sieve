@@ -1,11 +1,14 @@
 {
-  "name": "sievejs-server",
-  "description": "Lightweight server to handle sieve requests"
+  "name": "sievejs",
+  "description": "Turns any API into a client-side API.",
   "author": "Alexander Ose <alex@alexose.com>",
   "engine": "node >= 0.10.17",
-  "version" : "0.0.1",
+  "version": "0.0.1",
+  "main": "lib/sieve.js",
   "dependencies": {
-    "marked": "~0.3.1",
-    "sievejs" : ">0.0.0"
+    "JSONSelect": "~0.4.0",
+    "xpath": "0.0.5",
+    "jsdom": "~0.10.0",
+    "memory-cache": "0.0.5"
   }
 }

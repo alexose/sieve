@@ -1,1 +1,0 @@
-Usage /usr/bin/dtrace [--help] [-h | -G] [-C [-I<Path>]] -s File.d [-o <File>]
