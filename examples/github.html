@@ -9,16 +9,20 @@
         <div class="jumbotron">
             <div class="container">
                 <h1>Sieve example: GitHub</h1>
-                <p>Visualize a user's commit dates.</p>
+                <p>Visualize a Github user's contributions by their commit message length.</p>
 
                 <form class="form-inline" role="form">
                     <div class="form-group">
-                        <input type="text" id="username" class="form-control" placeholder="Username" value="alexose">
+                        <input type="text" id="username" class="form-control" placeholder="Username">
                         <button id="go" class="btn btn-primary">Go!</button>
                     </div>
                 </form>
-                <div class="alert alert-danger alert-dismissable" style="display: none" id="error"></span>
+                <div class="alert alert-danger alert-dismissable" style="display: none" id="error"></div>
             </div>
+        </div>
+        <div id="graphs" class="container"></div>
+        <div class="container">
+            <div class="alert alert-success alert-dismissable" style="display: none" id="display"></div>
         </div>
     </body>
     <script>
@@ -29,13 +33,14 @@ $(document).ready(function(){
 var server = 'http://alexose.com:3008';
 
 $('#go').click(function(e){
+
     e.preventDefault();
 
     // Read username from input box 
     var user = $('#username').val();
 
     // Basic validation
-    if (!user || user.length){
+    if (!user || !user.length){
         error('Please type a username.');
     }
 
@@ -46,22 +51,90 @@ $('#go').click(function(e){
             name : ".name"
         },
         then : {
-            url : "https://api.github.com/repos/" + user + "/sieve/commits",
+            url : "https://api.github.com/repos/" + user + "/{{name}}/commits",
             selector : {
-                sha : ":has(.author .login:val(\"" + user + "\")) :root.sha"
+                message : ":has(.author .login:val(\"" + user + "\")) :root.commit .message",
+                date : ":has(.author .login:val(\"" + user + "\")) :root.commit .author .date"
             }
         }
     }
 
+    display(request);
+
     // Send request to Sieve using our clever GET technique
     var str = btoa(JSON.stringify(request));
     $.getJSON(server + '?callback=?', { json : str }, finish);
-
-    // Do something with response
-    function finish(data){
-        console.log(data);
-    }
 });
+
+// Pretty-print request
+function display(json){
+    var str = JSON.stringify(json, null, '\t');
+
+    $('#display')
+        .empty()
+        .append(
+            $('<pre />')
+                .html(str)
+        )
+        .fadeIn();
+}
+
+// Collate results
+function finish(data){
+   
+    // Treat each result as its own graph
+    data.result.forEach(function(entry){
+
+        var dates    = entry.result.date,
+            messages = entry.result.message;
+
+        // Ignore empties
+        if (!dates.length){
+            return;
+        }
+
+        var formatted = dates.map(function(d, i){
+            return { date : new Date(d), value : messages[i].length };
+        });
+
+        graph(formatted);
+    });
+}
+
+// D3-based graph example
+function graph(data){
+
+    var svg = d3.select('#graphs').append('svg'),
+        w = 500,
+        h = 50;
+
+    svg.style("height", h);
+
+    var x = d3.time.scale() 
+        .domain([data[0].date, data[data.length-1].date])
+        .rangeRound([0, w]);
+
+    var y = d3.scale.linear()
+        .domain([1, 150])
+        .rangeRound([0, h]);
+
+    svg.selectAll('rect').remove();
+
+    var selection = svg.selectAll('rect').data(data);
+
+    selection.enter().append('rect')
+        .attr("x", function(d, i) { return x(d.date); })
+        .attr("y", h)
+        .attr("width", 3)
+        .attr("height", 0)
+        .transition()
+            .attr("y", function(d) { return h - y(d.value); })
+            .attr("height", function(d) { return y(d.value); });
+
+    selection.exit().remove();
+
+    return;
+}
 
 // Bootstrappy error handler
 var timeout;
