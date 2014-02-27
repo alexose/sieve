@@ -46,15 +46,18 @@ $('#go').click(function(e){
 
     // Construct a Sieve request 
     var request = {
-        url : "https://api.github.com/users/" + user + "/repos",
+        url : "https://api.github.com/users/{{user}}/repos",
+        data : {
+            user : user
+        }
         selector : {
             name : ".name"
         },
         then : {
-            url : "https://api.github.com/repos/" + user + "/{{name}}/commits",
+            url : "https://api.github.com/repos/{{user}}/{{name}}/commits",
             selector : {
-                message : ":has(.author .login:val(\"" + user + "\")) :root.commit .message",
-                date : ":has(.author .login:val(\"" + user + "\")) :root.commit .author .date"
+                message : ":has(.author .login:val(\"{{user}}\")) :root.commit .message",
+                date : ":has(.author .login:val(\"{{user}}\")) :root.commit .author .date"
             }
         }
     }
