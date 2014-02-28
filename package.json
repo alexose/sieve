@@ -5,6 +5,10 @@
   "engine": "node >= 0.10.17",
   "version": "0.0.1",
   "main": "sieve.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:alexose/sieve.git"
+  },
   "dependencies": {
     "JSONSelect": "~0.4.0",
     "xpath": "0.0.5",

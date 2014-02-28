@@ -43,16 +43,21 @@ Sieve.prototype.defaults = {
 }
 
 Sieve.prototype.parse = function(data, cb){
-  try {
-    var json = JSON.parse(data);
 
-    if (this.validate(json)){
-      json = this.fill(json);
+  if (!this.isObject(data)){
 
-      cb(json);
+    // Convert string to JSON
+    try {
+      data = JSON.parse(data);
+    } catch(e){
+      this.error('JSON error: ' + e.toString());
     }
-  } catch(e){
-    this.error('JSON error: ' + e.toString());
+  }
+
+  if (this.validate(data)){
+    data = this.fill(data);
+
+    cb(data);
   }
 }
 
@@ -146,6 +151,10 @@ Sieve.prototype.fetch = function(entry, pos, tries){
   };
 
   var method = secure ? https : http; 
+
+  if (this.options.verbose){
+    console.log('Fetching ' + entry.url);
+  }
 
   try {
     var request = method.request(options, function(response){
@@ -407,17 +416,12 @@ Sieve.prototype.template = function(entry){
   var results = sets.map(function(d){
 
     // Templating
-    var string = entry.url;
+    var string = JSON.stringify(entry);
     Object.keys(d).forEach(function(key){
-      string = string.replace('{{' + key + '}}', d[key]);  
+      string = string.split('{{' + key + '}}').join(d[key]);
     });
 
-    // TODO: Better cloning
-    var child = JSON.parse(JSON.stringify(entry));
-    child.url = string;
-    child.data = d;
-
-    return child;
+    return JSON.parse(string);
   });
 
   return results;
