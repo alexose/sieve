@@ -1,31 +1,24 @@
-var http = require("http")
-  , https = require("https")
-  , url = require("url")
-  , crypto = require('crypto')
-  , cache = require("memory-cache");
+// Native modules
+var http = require('http')
+  , https = require('https')
+  , url = require('url')
+  , crypto = require('crypto');
+
+// Local modules
+var template = require('template');
+
+// External dependencies
+var cache = require('memory-cache');
 
 module.exports = Sieve = function(data, cb, options){
 
-  // TODO: Authentication
+  this.data = data;
+  this.callback = callback;
+  this.options = options;
 
-  this.callback = cb;
-  this.results = [];
+  this.init();
 
-  this.options = this.extend({}, options, this.defaults);
-
-  var get = this.get.bind(this);
-
-  this.parse(data, function(json){
-
-    this.expected = json.length;
-
-    if (json.length){
-      json.forEach(get);
-    } else {
-      get(json, false);
-    }
-
-  }.bind(this));
+  this.run();
 
   return this;
 }
@@ -42,7 +35,25 @@ Sieve.prototype.defaults = {
   cache : 60 * 60 * 24
 }
 
-Sieve.prototype.parse = function(data, cb){
+Sieve.prototype.init = function(){
+
+  this
+    .initOptions()
+    .initRequests();
+
+  return this;
+}
+
+Sieve.prototype.initOptions = function(){
+
+  this.options = this.extend({}, options, this.defaults);
+
+  return this;
+};
+
+Sieve.prototype.initRequests = function(){
+
+  var data = this.data;
 
   if (!this.isObject(data)){
 
@@ -54,11 +65,11 @@ Sieve.prototype.parse = function(data, cb){
     }
   }
 
-  if (this.validate(data)){
-    data = this.fill(data);
+  this.validate(data);
 
-    cb(data);
-  }
+  this.data = template(data);
+
+  return this;
 }
 
 // TODO: Better validation feedback
@@ -77,11 +88,9 @@ Sieve.prototype.validate = function(json){
     if (!d.url){
       var string = 'No URL given';
 
-      throw new Error(single ? string + '.' : string + ' in entry ' + i + '.');
+      this.error(single ? string + '.' : string + ' in entry ' + i + '.');
     }
-  });
-
-  return true; 
+  }.bind(this));
 }
 
 Sieve.prototype.get = function(entry, pos){
@@ -382,104 +391,6 @@ Sieve.prototype.accumulate = function (entry, result, pos){
     }
   }
 };
-
-// Turns a templated entry into an array of entries
-Sieve.prototype.fill = function(entry){
-
-  var arr = [];
-
-  // We can also (recursively) handle an array of entries.
-  if (this.isArray(entry)){
-
-    var entries = entry;
-
-    entries.forEach(function(d){
-      arr.push(this.fill(d));
-    }.bind(this));
-
-    return arr; 
-  }
-
-  if (entry.url && entry.data){ 
- 
-    // Return an array of entries  
-    return this.template(entry);
-  } else {
-    return entry;
-  }
-}
-
-Sieve.prototype.template = function(entry){
-
-  var sets = this.makeSets(entry.data);
-
-  var results = sets.map(function(d){
-
-    // Templating
-    var string = JSON.stringify(entry);
-    Object.keys(d).forEach(function(key){
-      string = string.split('{{' + key + '}}').join(d[key]);
-    });
-
-    return JSON.parse(string);
-  });
-
-  return results;
-}
-
-// Given arrays of data, let's try to align them into sets.
-// (Most likely nobody will rely on this, but let's try)
-// TODO: Think about having users provide sets explicitly
-Sieve.prototype.makeSets = function(data){
-
-  var index = []
-    , arrays = []
-    , strings = [];
-
-  Object.keys(data).forEach(function(key){
-
-    var obj = {}
-      , value = obj[key] = data[key];
-
-    if (this.isArray(value)){
-      arrays.push({
-        key : key,
-        value : value
-      });
-    } else if (typeof(value) === 'string'){
-      strings.push(obj);
-    }
-  }.bind(this));
-
-  var sets = [];
-  
-  if (arrays.length){
-    
-    // Find shortest array
-    arrays.sort(function(a,b){
-      return a.value.length > b.value.length ? -1 : 1;
-    });
-    var shortest = arrays[0];
-    for (var i in shortest.value){
-
-      // TODO: Better cloning
-      var set = JSON.parse(JSON.stringify(strings));
-
-      for (var c in arrays){
-        var arr = arrays[c]
-          , key = arr.key
-          , value = arr.value[i];
-
-        set[key] = value;
-      }
-      sets.push(set);
-    }
-  } else {
-    sets = JSON.parse(JSON.stringify(strings));
-  }
-
-  return sets;
-}
 
 Sieve.prototype.isArray = function(obj){
   return toString.call(obj) === '[object Array]';
