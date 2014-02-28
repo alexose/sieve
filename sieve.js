@@ -5,20 +5,22 @@ var http = require('http')
   , crypto = require('crypto');
 
 // Local modules
-var template = require('template');
+var template = require('./lib/template')
+  , validate = require('./lib/validate')
+  , error = require('./lib/error');
 
 // External dependencies
 var cache = require('memory-cache');
 
-module.exports = Sieve = function(data, cb, options){
+module.exports = Sieve = function(data, callback, options){
 
   this.data = data;
   this.callback = callback;
   this.options = options;
 
-  this.init();
-
-  this.run();
+  this
+    .init()
+    .run();
 
   return this;
 }
@@ -38,20 +40,28 @@ Sieve.prototype.defaults = {
 Sieve.prototype.init = function(){
 
   this
+    .initErrors()
     .initOptions()
-    .initRequests();
+    .initEntries()
+    .initResults();
+
+  return this;
+}
+
+Sieve.prototype.initErrors = function(){
+  error = error.bind(this);
 
   return this;
 }
 
 Sieve.prototype.initOptions = function(){
 
-  this.options = this.extend({}, options, this.defaults);
+  this.options = this.extend({}, this.options, this.defaults);
 
   return this;
 };
 
-Sieve.prototype.initRequests = function(){
+Sieve.prototype.initEntries = function(){
 
   var data = this.data;
 
@@ -61,36 +71,35 @@ Sieve.prototype.initRequests = function(){
     try {
       data = JSON.parse(data);
     } catch(e){
-      this.error('JSON error: ' + e.toString());
+      error('JSON error: ' + e.toString());
     }
   }
 
-  this.validate(data);
+  validate(data);
 
-  this.data = template(data);
+  this.entries = template(data);
 
   return this;
-}
+};
 
-// TODO: Better validation feedback
-Sieve.prototype.validate = function(json){
+Sieve.prototype.initResults = function(){
+  this.results = [];
+ 
+  this.expected = this.isArray(this.entries) ? this.entries.length : 1;
 
-  var arr = json;
+  return this;
+};
 
-  // We might be reading arrays or single entries at this point.  Let's validate both:
-  if (!this.isArray(json)){
-    arr = [json];
+Sieve.prototype.run = function(entry, pos){
 
-    var single = true;
+  entry = entry || this.entries;
+
+  if (this.isArray(entry)){
+    entry.forEach(this.run.bind(this));
+  } else {
+    this.get(entry, 0);
   }
 
-  arr.forEach(function(d, i){
-    if (!d.url){
-      var string = 'No URL given';
-
-      this.error(single ? string + '.' : string + ' in entry ' + i + '.');
-    }
-  }.bind(this));
 }
 
 Sieve.prototype.get = function(entry, pos){
@@ -129,14 +138,14 @@ Sieve.prototype.fetch = function(entry, pos, tries){
   tries = tries || 0;
 
   if (tries > this.options.tries){
-    this.error('Tried ' + this.options.tries + ' times, but got no response.  It\'s possible that we\'re stuck in a redirect loop, or are being blocked.');
+    error('Tried ' + this.options.tries + ' times, but got no response.  It\'s possible that we\'re stuck in a redirect loop, or are being blocked.');
     return;
   }
 
   try {
     var a = url.parse(entry.url);
   } catch(e){
-    this.error('No URL specified.');
+    error('No URL specified.');
     return;
   }
         
@@ -179,7 +188,7 @@ Sieve.prototype.fetch = function(entry, pos, tries){
           this.fetch(entry, pos, tries+=1);
           return;
         } else {
-          this.error('Got a redirect, but couldn\'t find a URL to redirect to');
+          error('Got a redirect, but couldn\'t find a URL to redirect to');
         }
       }
 
@@ -205,17 +214,17 @@ Sieve.prototype.fetch = function(entry, pos, tries){
       }.bind(this));
 
     }.bind(this)).on("error", function(e){
-      this.error(e);
+      error(e);
     }.bind(this));
 
     request.setTimeout(this.options.timeout * 1000, function(){
-      this.error('Request timed out.');
+      error('Request timed out.');
     }.bind(this));
 
   request.end();
 
   } catch(e){
-    this.error(e);
+    error(e);
   }
 
   return;
@@ -300,13 +309,13 @@ Sieve.prototype.select = function(corpus, selector, name, cb){
       // Assume jsonselect unless otherwise specified
       var engine = require('./plugins/' + (name || 'jsonselect'));
     } catch(e){
-      this.error(e);
+      error(e);
     }
 
     try{
       engine.call(this, corpus, selector, cb);
     } catch(e){
-      this.error(e);
+      error(e);
     }
   }
 }
@@ -330,7 +339,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         , entries;
 
       if (!url){
-        this.error('Specified a "then" command, but didn\'t provide a template or a URL.');
+        error('Specified a "then" command, but didn\'t provide a template or a URL.');
       }
 
       // If we have a keyed array, we're going to use templating 
@@ -358,7 +367,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       arr.push(obj);
       
       if (typeof(pos) === 'number'){
-       
+      
         // Check to see if we've accumulated all the results we need
         if (arr.length === this.expected){
 
@@ -418,17 +427,4 @@ Sieve.prototype.extend = function(){
   
 
   return obj;
-}
-
-Sieve.prototype.error = function(error){
-
-  var type = typeof(error);
-
-  if (type === 'object'){
-    console.log(error.stack);
-    this.callback(error.toString());
-  } else if (type === 'string'){
-    this.callback(error);
-  }
-
 }
