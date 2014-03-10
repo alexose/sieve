@@ -1,6 +1,5 @@
 var template = require('./lib/template')
   , validate = require('./lib/validate')
-  , error    = require('./lib/error')
   , select   = require('./lib/select')
   , fetch    = require('./lib/fetch')
   , helpers  = require('./lib/helpers');
@@ -11,9 +10,14 @@ module.exports = Sieve = function init(data, callback, options){
   this.callback = callback;
   this.options = options;
 
-  this
-    .init()
-    .run();
+  try {
+    this.init();
+  } catch(e){
+    this.error(e);
+    return;
+  }
+
+  this.run();
 
   return this;
 };
@@ -31,7 +35,6 @@ Sieve.prototype.defaults = {
 Sieve.prototype.init = function(){
 
   this
-    .initErrors()
     .initOptions()
     .initEntries()
     .initResults();
@@ -39,15 +42,13 @@ Sieve.prototype.init = function(){
   return this;
 };
 
-Sieve.prototype.initErrors = function(){
-  error = error.bind(this);
-
-  return this;
-};
-
 Sieve.prototype.initOptions = function(){
 
-  this.options = this.extend({}, this.options, this.defaults);
+  this.options = this.extend(
+      {},
+      this.options,
+      this.defaults
+    );
 
   return this;
 };
@@ -62,7 +63,7 @@ Sieve.prototype.initEntries = function(){
     try {
       data = JSON.parse(data);
     } catch(e){
-      error('JSON error: ' + e.toString());
+      throw new Error('JSON error: ' + e.toString());
     }
   }
 
@@ -74,14 +75,18 @@ Sieve.prototype.initEntries = function(){
 };
 
 Sieve.prototype.initResults = function(){
-  this.results = [];
 
+  this.results = [];
   this.expected = helpers.isArray(this.entries) ? this.entries.length : 1;
 
   return this;
 };
 
 Sieve.prototype.run = function(entry, pos){
+
+  if (!this.entries){
+    return;
+  }
 
   entry = entry || this.entries;
 
@@ -90,13 +95,13 @@ Sieve.prototype.run = function(entry, pos){
   if (helpers.isArray(entry)){
     entry.forEach(this.run.bind(this));
   } else {
-    this.get(entry, 0, options, this.accumulate.bind(this));
+    this.get(entry, 0);
   }
-
 };
 
-Sieve.prototype.get = function(entry, pos, options, cb){
+Sieve.prototype.get = function(entry, pos){
 
+  console.log(entry);
   // See if we already have the request cache
   var result = helpers.fromCache(entry, true);
 
@@ -106,13 +111,12 @@ Sieve.prototype.get = function(entry, pos, options, cb){
       result.cached = 'result';
     }
 
-    cb(entry, result, pos);
+    this.accumulate(entry, result, pos);
   } else {
 
     // Go fetch!
-    fetch(entry, pos, options, cb);
+    fetch(entry, pos, this.options, this.accumulate.bind(this));
   }
-
 };
 
 Sieve.prototype.accumulate = function (entry, result, pos){
@@ -134,7 +138,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         , entries;
 
       if (!url){
-        error('Specified a "then" command, but didn\'t provide a template or a URL.');
+        throw new Error('Specified a "then" command, but didn\'t provide a template or a URL.');
       }
 
       // If we have a keyed array, we're going to use templating
@@ -214,4 +218,19 @@ Sieve.prototype.extend = function(){
 
 
   return obj;
+};
+
+Sieve.prototype.error = function(e){
+
+  var type = typeof(e);
+
+  if (type === 'object'){
+    console.log(e.stack);
+    this.callback(e.toString());
+  } else if (type === 'string'){
+    console.log(e);
+    this.callback(e);
+  } else {
+    this.callback('Unknown error.');
+  }
 };
