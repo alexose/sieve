@@ -3,7 +3,6 @@ var template = require('./lib/template')
   , error    = require('./lib/error')
   , select   = require('./lib/select')
   , fetch    = require('./lib/fetch')
-  , hash     = require('./lib/hash')
   , helpers  = require('./lib/helpers');
 
 module.exports = Sieve = function init(data, callback, options){
