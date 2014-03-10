@@ -101,7 +101,6 @@ Sieve.prototype.run = function(entry, pos){
 
 Sieve.prototype.get = function(entry, pos){
 
-  console.log(entry);
   // See if we already have the request cache
   var result = helpers.fromCache(entry, true);
 
@@ -111,7 +110,7 @@ Sieve.prototype.get = function(entry, pos){
       result.cached = 'result';
     }
 
-    this.accumulate(entry, result, pos);
+    this.callback(result);
   } else {
 
     // Go fetch!
@@ -122,7 +121,11 @@ Sieve.prototype.get = function(entry, pos){
 Sieve.prototype.accumulate = function (entry, result, pos){
 
   if (entry.selector){
-    select(result, entry.selector, entry.engine, selected.bind(this));
+    try {
+      select(result, entry.selector, entry.engine, selected.bind(this));
+    } catch(e){
+      this.error(e);
+    }
   } else {
     selected.call(this, result);
   }
