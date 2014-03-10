@@ -85,7 +85,7 @@ Sieve.prototype.initEntries = function(){
 
 Sieve.prototype.initResults = function(){
   this.results = [];
- 
+
   this.expected = this.isArray(this.entries) ? this.entries.length : 1;
 
   return this;
@@ -125,11 +125,11 @@ Sieve.prototype.get = function(entry, pos){
       // Stagger requests according to "wait" param
       // FIXME: Due to Sieve's recursive nature, this won't work for nested requests
       var wait = (entry.wait || this.options.wait) * 1000 * pos;
-     
+
       setTimeout(function(){
         this.fetch(entry, pos);
-      }.bind(this), wait); 
-    
+      }.bind(this), wait);
+
     }
   }
 }
@@ -149,13 +149,13 @@ Sieve.prototype.fetch = function(entry, pos, tries){
     error('No URL specified.');
     return;
   }
-        
+
   // Override default headers with user-specified headers
-  // TODO: Unify these options 
+  // TODO: Unify these options
   var headers = JSON.parse(JSON.stringify(this.options.headers));
 
   for (var key in entry.headers){
-    headers[key] = entry.headers[key]; 
+    headers[key] = entry.headers[key];
   }
 
   var secure = a.protocol == 'https:';
@@ -169,7 +169,7 @@ Sieve.prototype.fetch = function(entry, pos, tries){
     auth : a.auth
   };
 
-  var method = secure ? https : http; 
+  var method = secure ? https : http;
 
   if (this.options.verbose){
     console.log('Fetching ' + entry.url);
@@ -177,10 +177,10 @@ Sieve.prototype.fetch = function(entry, pos, tries){
 
   try {
     var request = method.request(options, function(response){
-      
+
       var code = response.statusCode;
 
-      // Handle redirects 
+      // Handle redirects
       if (code == 301 || code == 302){
         var newURL = response.headers.location;
 
@@ -235,7 +235,7 @@ Sieve.prototype.cache = {
   get : function(entry, all){
 
     var key = this.hash(entry, all)
- 
+
     return cache.get(key);
   },
   put : function(entry, data, all){
@@ -247,7 +247,7 @@ Sieve.prototype.cache = {
 
       time = time > max ? max : time;
 
-      cache.put(key, data, time); 
+      cache.put(key, data, time);
   },
   hash : function(entry, all){
     var json;
@@ -255,7 +255,7 @@ Sieve.prototype.cache = {
     if (all){
 
       // Stringify the entire entry
-      json = entry; 
+      json = entry;
     } else {
 
       // Only stringify the parts of the entry that are relevant to the HTTP request
@@ -269,7 +269,7 @@ Sieve.prototype.cache = {
         json.method = entry.method;
       }
     }
-  
+
     var string = JSON.stringify(json)
       , hash = crypto.createHash('md5').update(string).digest('hex')
       , prefix = all ? 'result-' : 'response-';
@@ -292,7 +292,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       , cb = add.bind(this);
 
     if (entry.then){
-      
+
       var url = entry.then.url
         , entries;
 
@@ -300,7 +300,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         error('Specified a "then" command, but didn\'t provide a template or a URL.');
       }
 
-      // If we have a keyed array, we're going to use templating 
+      // If we have a keyed array, we're going to use templating
       if (this.isObject(result)){
         entry.then.data = result;
       }
@@ -308,11 +308,11 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       new Sieve(JSON.stringify(entry.then), function(results){
         cb(results);
       }, this.options);
-    
+
     } else {
       cb(result)
     }
-  
+
     // Add result to array
     function add(result){
 
@@ -323,9 +323,9 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       };
 
       arr.push(obj);
-      
+
       if (typeof(pos) === 'number'){
-      
+
         // Check to see if we've accumulated all the results we need
         if (arr.length === this.expected){
 
@@ -336,12 +336,12 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
           // Remove "pos" attrs
           arr.forEach(function(d){ delete d.pos });
-       
+
           finish.call(this, arr);
-        } 
+        }
 
       } else {
-        
+
         // If pos is not a number, then we're dealing with a single request.
         delete arr[0].pos;
 
@@ -372,17 +372,17 @@ Sieve.prototype.extend = function(){
 
   var args = Array.prototype.slice.call(arguments)
     , obj = args.reverse().pop();
- 
+
   args.forEach(function(d){
     if (this.isObject(d)){
       for (var prop in d){
         if (d.hasOwnProperty(prop)){
-         obj[prop] = d[prop]; 
+         obj[prop] = d[prop];
         }
       }
     }
   }.bind(this));
-  
+
 
   return obj;
 }
