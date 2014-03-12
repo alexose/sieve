@@ -67,6 +67,7 @@ $('#go').click(function(e){
     }
 
     var json = JSON.stringify(request);
+
     // Send request to Sieve using websocket
     ws.send(json);
 });

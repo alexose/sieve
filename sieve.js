@@ -88,6 +88,10 @@ Sieve.prototype.initEntries = function(){
 
   this.entries = template(data);
 
+  if (!this.entries.length){
+    this.error("No results.");
+  }
+
   return this;
 };
 
