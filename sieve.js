@@ -4,11 +4,12 @@ var template = require('./lib/template')
   , fetch    = require('./lib/fetch')
   , helpers  = require('./lib/helpers');
 
-module.exports = Sieve = function init(data, callback, options){
+module.exports = Sieve = function init(data, options, increment, finish){
 
   this.data = data;
-  this.callback = callback;
   this.options = options;
+  this.increment = increment;
+  this.finish = finish;
 
   try {
     this.init();
@@ -110,7 +111,7 @@ Sieve.prototype.get = function(entry, pos){
       result.cached = 'result';
     }
 
-    this.callback(result);
+    this.finish(result);
   } else {
 
     // Go fetch!
@@ -197,7 +198,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         // Store results in cache
         helpers.toCache(entry, arr, true);
 
-        this.callback(arr);
+        this.finish(arr);
       }
     }
   }
@@ -229,11 +230,11 @@ Sieve.prototype.error = function(e){
 
   if (type === 'object'){
     console.log(e.stack);
-    this.callback(e.toString());
+    this.finish(e.toString());
   } else if (type === 'string'){
     console.log(e);
-    this.callback(e);
+    this.finish(e);
   } else {
-    this.callback('Unknown error.');
+    this.finish('Unknown error.');
   }
 };
