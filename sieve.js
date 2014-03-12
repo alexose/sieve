@@ -198,7 +198,33 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         pos : pos
       };
 
-      this.options.hooks.onIncrement(entry.debug ? obj : result);
+      var increment = this.options.hooks.onIncrement;
+      if (entry.debug){
+        increment(obj);
+      } else if (result) {
+
+        // Supress empty results
+        var response = {}
+          , lastprop
+          , props = 0;
+        if (helpers.isObject(result)){
+          for (var prop in result){
+            if (result[prop].length){
+              response[prop] = result[prop];
+              lastprop = prop;
+              props++;
+            }
+          }
+        } else {
+          props++;
+        }
+
+        if (props == 1 && lastprop){
+          increment(result[lastprop]);
+        } else if (props > 0){
+          increment(result);
+        }
+      }
 
       arr.push(obj);
 
