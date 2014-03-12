@@ -4,12 +4,10 @@ var template = require('./lib/template')
   , fetch    = require('./lib/fetch')
   , helpers  = require('./lib/helpers');
 
-module.exports = Sieve = function init(data, options, increment, finish){
+module.exports = Sieve = function init(data, options){
 
-  this.data = data;
+  this.data    = data;
   this.options = options;
-  this.increment = increment;
-  this.finish = finish;
 
   try {
     this.init();
@@ -37,6 +35,7 @@ Sieve.prototype.init = function(){
 
   this
     .initOptions()
+    .initHooks()
     .initEntries()
     .initResults();
 
@@ -52,6 +51,23 @@ Sieve.prototype.initOptions = function(){
     );
 
   return this;
+};
+
+Sieve.prototype.initHooks = function(){
+
+  var available = ['onStart', 'onIncrement', 'onFinish']
+    , hooks     = this.options.hooks || {}
+    , result    = {}
+    , noop      = function(){};
+
+  available.forEach(function(d){
+    result[d] = hooks[d] || noop;
+  });
+
+  this.hooks = result;
+
+  return this;
+
 };
 
 Sieve.prototype.initEntries = function(){
@@ -102,6 +118,12 @@ Sieve.prototype.run = function(entry, pos){
 
 Sieve.prototype.get = function(entry, pos){
 
+  var hash = helpers.hash(entry);
+
+  this.hooks.onStart({
+    hash : helpers.hash(entry)
+  });
+
   // See if we already have the request cache
   var result = helpers.fromCache(entry, true);
 
@@ -111,7 +133,7 @@ Sieve.prototype.get = function(entry, pos){
       result.cached = 'result';
     }
 
-    this.finish(result);
+    this.hooks.onFinish(result);
   } else {
 
     // Go fetch!
@@ -198,7 +220,7 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         // Store results in cache
         helpers.toCache(entry, arr, true);
 
-        this.finish(arr);
+        this.hooks.onFinish(arr);
       }
     }
   }
@@ -226,15 +248,16 @@ Sieve.prototype.extend = function(){
 
 Sieve.prototype.error = function(e){
 
-  var type = typeof(e);
+  var type = typeof(e)
+    , finish = this.hooks.onFinish;
 
   if (type === 'object'){
     console.log(e.stack);
-    this.finish(e.toString());
+    finish(e.toString());
   } else if (type === 'string'){
     console.log(e);
-    this.finish(e);
+    finish(e);
   } else {
-    this.finish('Unknown error.');
+    finish('Unknown error.');
   }
 };
