@@ -44,7 +44,7 @@ Sieve.prototype.init = function(){
 
 Sieve.prototype.initOptions = function(){
 
-  this.options = this.extend(
+  this.options = helpers.extend(
       {},
       this.options,
       this.defaults
@@ -89,7 +89,7 @@ Sieve.prototype.initEntries = function(){
   this.entries = template(data);
 
   if (!this.entries.length){
-    this.error("No results.");
+    this.error("Error: No results.");
   }
 
   return this;
@@ -177,8 +177,11 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       }
 
       // Define behaviors for sub-sieve
-      var options = this.extend({}, this.options);
+      var options = helpers.extend(true, {}, this.options);
       options.hooks.onFinish = cb;
+
+      // Prevent onIncrement.  Recursion here would mean re-printing the data at each level.  No good!
+      this.options.hooks.onIncrement = function(){};
 
       new Sieve(JSON.stringify(entry.then), options);
 
@@ -191,11 +194,11 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
       var obj = {
         result : result,
-        selection : entry.selection,
+        entry : entry,
         pos : pos
       };
 
-      this.options.hooks.onIncrement(obj);
+      this.options.hooks.onIncrement(entry.debug ? obj : result);
 
       arr.push(obj);
 
@@ -209,8 +212,9 @@ Sieve.prototype.accumulate = function (entry, result, pos){
             return a.pos > b.pos ? 1 : -1;
           });
 
-          // Remove "pos" attrs
-          arr.forEach(function(d){ delete d.pos; });
+          if (!entry.debug){
+            arr = arr.map(function(d){ return d.result; });
+          }
 
           finish.call(this, arr);
         }
@@ -232,26 +236,6 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       }
     }
   }
-};
-
-// Shallow extend helper
-Sieve.prototype.extend = function(){
-
-  var args = Array.prototype.slice.call(arguments)
-    , obj = args.reverse().pop();
-
-  args.forEach(function(d){
-    if (helpers.isObject(d)){
-      for (var prop in d){
-        if (d.hasOwnProperty(prop)){
-         obj[prop] = d[prop];
-        }
-      }
-    }
-  }.bind(this));
-
-
-  return obj;
 };
 
 Sieve.prototype.error = function(e){
