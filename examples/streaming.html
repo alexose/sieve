@@ -9,11 +9,11 @@
         <div class="jumbotron">
             <div class="container">
                 <h1>Sieve example: Streaming</h1>
-                <p>Watch results roll in via websocket.</p>
+                <p>Watch results roll in via WebSocket.</p>
 
                 <form class="form-inline" role="form">
                     <div class="form-group">
-                        <input type="text" id="username" class="form-control" placeholder="Username">
+                        <input type="text" id="username" class="form-control" placeholder="GitHub Username">
                         <button id="go" class="btn btn-primary">Go!</button>
                     </div>
                 </form>
@@ -34,7 +34,7 @@ var server = 'ws://sieve.alexose.com:8082/'
   , ws = new WebSocket(server);
 
 ws.onmessage = function(event){
-  console.log(event);
+  display(JSON.parse(event.data));
 };
 
 $('#go').click(function(e){
@@ -56,7 +56,7 @@ $('#go').click(function(e){
             user : user
         },
         selector : {
-            name : ":nth-child(-n+2) .name"
+            name : ".name"
         },
         then : {
             url : "https://api.github.com/repos/{{user}}/{{name}}/commits",
@@ -65,7 +65,6 @@ $('#go').click(function(e){
             }
         }
     }
-    display(request);
 
     var json = JSON.stringify(request);
     // Send request to Sieve using websocket
@@ -77,69 +76,11 @@ function display(json){
     var str = JSON.stringify(json, null, '\t');
 
     $('#display')
-        .empty()
-        .append(
+        .prepend(
             $('<pre />')
                 .html(str)
         )
         .fadeIn();
-}
-
-// Collate results
-function finish(data){
-
-    // Treat each result as its own graph
-    data.result.forEach(function(entry){
-
-        var dates    = entry.result.date,
-            messages = entry.result.message;
-
-        // Ignore empties
-        if (!dates.length){
-            return;
-        }
-
-        var formatted = dates.map(function(d, i){
-            return { date : new Date(d), value : messages[i].length };
-        });
-
-        graph(formatted);
-    });
-}
-
-// D3-based graph example
-function graph(data){
-
-    var svg = d3.select('#graphs').append('svg'),
-        w = 500,
-        h = 50;
-
-    svg.style("height", h);
-
-    var x = d3.time.scale()
-        .domain([data[0].date, data[data.length-1].date])
-        .rangeRound([0, w]);
-
-    var y = d3.scale.linear()
-        .domain([1, 150])
-        .rangeRound([0, h]);
-
-    svg.selectAll('rect').remove();
-
-    var selection = svg.selectAll('rect').data(data);
-
-    selection.enter().append('rect')
-        .attr("x", function(d, i) { return x(d.date); })
-        .attr("y", h)
-        .attr("width", 3)
-        .attr("height", 0)
-        .transition()
-            .attr("y", function(d) { return h - y(d.value); })
-            .attr("height", function(d) { return y(d.value); });
-
-    selection.exit().remove();
-
-    return;
 }
 
 // Bootstrappy error handler
