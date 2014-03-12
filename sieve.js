@@ -172,9 +172,11 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         entry.then.data = result;
       }
 
-      new Sieve(JSON.stringify(entry.then), function(results){
-        cb(results);
-      }, this.options);
+      // Define behaviors for sub-sieve
+      var options = this.extend({}, this.options);
+      options.hooks.onFinish = cb;
+
+      new Sieve(JSON.stringify(entry.then), options);
 
     } else {
       cb(result);
@@ -188,6 +190,8 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         selection : entry.selection,
         pos : pos
       };
+
+      this.options.hooks.onIncrement(obj);
 
       arr.push(obj);
 
