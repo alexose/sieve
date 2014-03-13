@@ -11,9 +11,16 @@
                 <h1>Sieve example: Streaming</h1>
                 <p>Watch results roll in via WebSocket.</p>
 
-                <form class="form-inline" role="form">
+                <div class="row">
+                    <div class="col-xs-7">
+                        <textarea id="request" class="form-control" rows="16"></textarea>
+                    </div>
+                    <div class="col-xs-5">
+                        <textarea id="result" class="form-control" style="display: none" rows="16"></textarea>
+                    </div>
+                </div>
+                <form class="form" role="form">
                     <div class="form-group">
-                        <input type="text" id="username" class="form-control" placeholder="GitHub Username">
                         <button id="go" class="btn btn-primary">Go!</button>
                     </div>
                 </form>
@@ -30,51 +37,78 @@
 (function($){
 $(document).ready(function(){
 
+var request = $('#request')
+  , result  = $('#result');
+
 var server = 'ws://sieve.alexose.com:8082/'
-  , ws = new WebSocket(server);
+  , ws     = new WebSocket(server);
 
 ws.onmessage = function(event){
+
+  var str = event.data;
+
+  if (!str){
+      return;
+  }
+
+  data = JSON.parse(str).data;
+
+  if (data){
+      result.val(
+          result.val() + data.join('\n------------------\n')
+      )
+  }
+
   display(JSON.parse(event.data));
 };
+
+// Provide an example request
+var example = {
+    url : "https://api.github.com/users/{{user}}/repos",
+    data : {
+        user : 'mdo'
+    },
+    selector : {
+        name : ".name"
+    },
+    then : {
+        url : "https://api.github.com/repos/{{user}}/{{name}}/commits",
+        selector : {
+            message : ":has(.author .login:val(\"{{user}}\")) :root.commit .message"
+        }
+    }
+}
+
+request.val(prettyPrint(example));
 
 $('#go').click(function(e){
 
     e.preventDefault();
 
-    // Read username from input box
-    var user = $('#username').val();
+    // Read request from textarea
+    var str = request.val();
 
     // Basic validation
-    if (!user || !user.length){
-        error('Please type a username.');
+    if (!str || !str.length){
+        error('Please type a request.');
+        return;
     }
 
-    // Construct a Sieve request
-    var request = {
-        url : "https://@api.github.com/users/{{user}}/repos",
-        data : {
-            user : user
-        },
-        selector : {
-            name : ".name"
-        },
-        then : {
-            url : "https://api.github.com/repos/{{user}}/{{name}}/commits",
-            selector : {
-                message : ":has(.author .login:val(\"{{user}}\")) :root.commit .message"
-            }
-        }
-    }
+    var json = str;
 
-    var json = JSON.stringify(request);
+    // result.fadeIn();
 
     // Send request to Sieve using websocket
     ws.send(json);
 });
 
+function prettyPrint(json){
+    return JSON.stringify(json, null, '\t');
+}
+
 // Pretty-print request
 function display(json){
-    var str = JSON.stringify(json, null, '\t');
+    var str = prettyPrint(json);
 
     $('#display')
         .prepend(
