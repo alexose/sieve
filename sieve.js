@@ -46,8 +46,8 @@ Sieve.prototype.initOptions = function(){
 
   this.options = helpers.extend(
       {},
-      this.options,
-      this.defaults
+      this.defaults,
+      this.options
     );
 
   return this;
@@ -86,10 +86,19 @@ Sieve.prototype.initEntries = function(){
 
   validate(data);
 
-  this.entries = template(data);
+  var entries = template(data);
 
-  if (!this.entries.length){
-    this.error("Error: No results.");
+  if (helpers.isArray(entries)){
+
+    if (!this.entries.length){
+      this.error("Error: No results.");
+    }
+
+    this.entries = entries;
+  } else if (helpers.isObject(entries)){
+    this.entries = entries;
+  } else {
+    this.error("Error: No entry.");
   }
 
   return this;
@@ -198,7 +207,8 @@ Sieve.prototype.accumulate = function (entry, result, pos){
         pos : pos
       };
 
-      var increment = this.options.hooks.onIncrement;
+      var increment = this.hooks.onIncrement;
+
       if (entry.debug){
         increment(obj);
       } else if (result) {
