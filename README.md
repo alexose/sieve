@@ -1,10 +1,12 @@
 Sieve
 =====
 
+Try the [live demo](http://sieve.alexose.com)!
+
 Sieve makes any resource on the web available to your client-side application.  It serves many purposes:
 
 * Acts as a proxy for APIs that don't support JSONP
-* Simplifies excessively verbose responses using selectors (JSONSelect, Xpath, etc.) 
+* Simplifies excessively verbose responses using selectors (JSONSelect, Xpath, etc.)
 * Combines multiple HTTP requests into one
 
 Sieve is provided as a node module and has very minimal dependencies.  It's probably not something you want to use in production, though.  Not yet.
@@ -103,7 +105,7 @@ You can also provide an array of requests in a single query:
                 "selector" : ".name"
             }
         ];
-     
+
 Sieve will wait until each request is finished resolving before returning an array of its own:
 
     [
@@ -130,7 +132,7 @@ Sieve will wait until each request is finished resolving before returning an arr
 
 Even though most selector engines provide ways to combine multiple queries, it can be helpful to run separate queries and receive separate results.  Sieve provides a way to do just that without having to make multiple HTTP requests:
 
-    var request = {   
+    var request = {
             "url" : "https://api.github.com/repos/alexose/sieve/commits",
             "selector" : {
                 "dates" : ".commit .date",
@@ -163,7 +165,7 @@ Which will yield:
 
 A common use for web scrapers is to access a range of related URLs.  In Sieve, this can be achieved by either providing an array of entries (see "Combining multiple entries"), or a URL template.  Sieve uses a mustache-esque format for its templates:
 
-    var request = {   
+    var request = {
             "url" : "https://api.github.com/repos/alexose/{{repo}}/commits",
             "data" : {
                 "repo" : ["sieve", "pomodoro", "photodump"]
@@ -203,7 +205,7 @@ Which will yield:
 
 Here's where things start to get a little crazy:  You can use the results from a keyed selector object (see "Combining Multiple Selectors") to query even more URLs:
 
-    var request = { 
+    var request = {
             "url" : "https://api.github.com/users/alexose/repos",
             "method" : "GET",
             "selector" : {

@@ -90,7 +90,7 @@ Sieve.prototype.initEntries = function(){
 
   if (helpers.isArray(entries)){
 
-    if (!this.entries.length){
+    if (!entries.length){
       this.error("Error: No results.");
     }
 
