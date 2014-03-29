@@ -3,13 +3,15 @@ Sieve
 
 Try the [live demo](http://sieve.alexose.com)!
 
-Sieve makes any resource on the web available to your client-side application.  It serves many purposes:
+Sieve makes any resource on the web available to your application.
 
-* Acts as a proxy for APIs that don't support JSONP
-* Simplifies excessively verbose responses using selectors (JSONSelect, Xpath, etc.)
-* Combines multiple HTTP requests into one
+* It's a proxy
+* It's a cache
+* It's a web scraper
 
-Sieve is provided as a node module and has very minimal dependencies.  It's probably not something you want to use in production, though.  Not yet.
+But at its core, it's a way of turning lots of HTTP requests into a single stream.
+
+Sieve is provided as a node module and as a hosted service.  You, too, can run a hosted version of Sieve with [Sieve-Server](http://github.com/alexose/sieve-server).
 
 Usage
 -----
