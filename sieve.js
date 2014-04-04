@@ -134,7 +134,6 @@ Sieve.prototype.get = function(entry, pos){
 
   var hash = helpers.hash(entry);
 
-  console.log(pos);
   this.hooks.onStart({
     hash : helpers.hash(entry)
   });
