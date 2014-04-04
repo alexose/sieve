@@ -119,13 +119,14 @@ Sieve.prototype.run = function(entry, pos){
   }
 
   entry = entry || this.entries;
+  pos = pos || 0;
 
   var options = this.options;
 
   if (helpers.isArray(entry)){
     entry.forEach(this.run.bind(this));
   } else {
-    this.get(entry, 0);
+    this.get(entry, pos);
   }
 };
 
@@ -133,6 +134,7 @@ Sieve.prototype.get = function(entry, pos){
 
   var hash = helpers.hash(entry);
 
+  console.log(pos);
   this.hooks.onStart({
     hash : helpers.hash(entry)
   });
