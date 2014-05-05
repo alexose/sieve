@@ -173,6 +173,11 @@ Sieve.prototype.accumulate = function (entry, result, pos){
     var arr = this.results
       , cb = add.bind(this);
 
+    // Experimental "replace" feature
+    if (entry.replace){
+      result = replace(result, entry.replace);
+    }
+
     if (entry.then){
 
       var url = entry.then.url
@@ -202,11 +207,6 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
     // Add result to array
     function add(result){
-
-      // Experimental "replace" feature
-      if (entry.replace){
-        result = replace(result, entry.replace);
-      }
 
       var obj = {
         result : result,
