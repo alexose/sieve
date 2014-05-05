@@ -56,7 +56,7 @@ Sieve.prototype.initOptions = function(){
 
 Sieve.prototype.initHooks = function(){
 
-  var available = ['onStart', 'onIncrement', 'onFinish']
+  var available = ['onStart', 'onIncrement', 'onError', 'onFinish']
     , hooks     = this.options.hooks || {}
     , result    = {}
     , noop      = function(){};
@@ -285,15 +285,15 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 Sieve.prototype.error = function(e){
 
   var type = typeof(e)
-    , finish = this.hooks.onFinish;
+    , error = this.hooks.onError;
 
   if (type === 'object'){
     console.log(e.stack);
-    finish(e.toString());
+    error(e.toString());
   } else if (type === 'string'){
     console.log(e);
-    finish(e);
+    error(e);
   } else {
-    finish('Unknown error.');
+    error('Unknown error.');
   }
 };
