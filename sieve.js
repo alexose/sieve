@@ -211,7 +211,8 @@ Sieve.prototype.accumulate = function (entry, result, pos){
       var obj = {
         result : result,
         entry : entry,
-        pos : pos
+        pos : pos,
+        expected : this.expected
       };
 
       var increment = this.hooks.onIncrement;
