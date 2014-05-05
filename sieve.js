@@ -202,6 +202,13 @@ Sieve.prototype.accumulate = function (entry, result, pos){
     // Add result to array
     function add(result){
 
+      // Experimental "format" feature
+      if (entry.format){
+        for (var prop in entry.data){
+
+        }
+      }
+
       var obj = {
         result : result,
         entry : entry,
