@@ -2,6 +2,7 @@ var template = require('./lib/template')
   , validate = require('./lib/validate')
   , select   = require('./lib/select')
   , fetch    = require('./lib/fetch')
+  , replace  = require('./lib/replace')
   , helpers  = require('./lib/helpers');
 
 module.exports = Sieve = function init(data, options){
@@ -202,11 +203,9 @@ Sieve.prototype.accumulate = function (entry, result, pos){
     // Add result to array
     function add(result){
 
-      // Experimental "format" feature
-      if (entry.format){
-        for (var prop in entry.data){
-
-        }
+      // Experimental "replace" feature
+      if (entry.replace){
+        result = replace(result, entry.replace);
       }
 
       var obj = {
