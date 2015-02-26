@@ -158,6 +158,8 @@ Sieve.prototype.get = function(entry, pos){
 
 Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
 
+    console.log('COOKIE:' + cookie);
+
   if (entry.selector){
     try {
       select(result, entry.selector, entry.engine, selected.bind(this));
@@ -191,7 +193,7 @@ Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
       if (helpers.isObject(result)){
         entry.then.data = result;
       }
-        
+
       // Experiemental response header support
       if (entry.useHeaders){
         helpers.extend(result, headers)
@@ -204,10 +206,6 @@ Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
         }
 
         entry.then.headers['Cookie'] = cookie;
-
-        if (entry.debug){
-          result.cookie = cookie;
-        }
       }
 
       // Define behaviors for sub-sieve
@@ -232,6 +230,10 @@ Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
         pos : pos,
         expected : this.expected
       };
+
+      if (cookie){
+        obj.cookie = cookie;
+      }
 
       var increment = this.hooks.onIncrement;
 
