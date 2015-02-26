@@ -156,7 +156,7 @@ Sieve.prototype.get = function(entry, pos){
   }
 };
 
-Sieve.prototype.accumulate = function (entry, result, headers, pos){
+Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
 
   if (entry.selector){
     try {
@@ -189,13 +189,25 @@ Sieve.prototype.accumulate = function (entry, result, headers, pos){
 
       // If we have a keyed array, we're going to use templating
       if (helpers.isObject(result)){
-        
-        // Experiemental response header support
-		if (entry.useHeaders){
-			helpers.extend(result, headers)
-		}
-     
         entry.then.data = result;
+      }
+        
+      // Experiemental response header support
+      if (entry.useHeaders){
+        helpers.extend(result, headers)
+      }
+
+      // Experimental cookie support
+      if (cookie){
+        if (!entry.then.headers){
+          entry.then.headers = {};
+        }
+
+        entry.then.headers['Cookie'] = cookie;
+
+        if (entry.debug){
+          result.cookie = cookie;
+        }
       }
 
       // Define behaviors for sub-sieve
