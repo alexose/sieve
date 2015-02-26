@@ -156,7 +156,7 @@ Sieve.prototype.get = function(entry, pos){
   }
 };
 
-Sieve.prototype.accumulate = function (entry, result, pos){
+Sieve.prototype.accumulate = function (entry, result, headers, pos){
 
   if (entry.selector){
     try {
@@ -189,6 +189,12 @@ Sieve.prototype.accumulate = function (entry, result, pos){
 
       // If we have a keyed array, we're going to use templating
       if (helpers.isObject(result)){
+        
+        // Experiemental response header support
+		if (entry.useHeaders){
+			helpers.extend(result, headers)
+		}
+     
         entry.then.data = result;
       }
 
