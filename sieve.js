@@ -189,14 +189,25 @@ Sieve.prototype.accumulate = function (entry, result, headers, pos){
 
       // If we have a keyed array, we're going to use templating
       if (helpers.isObject(result)){
-        
-        // Experiemental response header support
-		if (entry.useHeaders){
-			helpers.extend(result, headers)
-		}
-     
         entry.then.data = result;
       }
+        
+      // Experiemental response header support
+      if (entry.useHeaders){
+        helpers.extend(result, headers)
+      }
+
+      // Cookie support
+      var cookie = headers['set-cookie'];
+      if (cookie){
+        if (!entry.then.headers){
+          entry.then.headers = {};
+        }
+
+        entry.then.headers['Cookie'] = cookie;
+        entry.cookie = cookie;
+      }
+     
 
       // Define behaviors for sub-sieve
       var options = helpers.extend(true, {}, this.options);
