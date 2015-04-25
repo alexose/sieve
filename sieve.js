@@ -140,7 +140,7 @@ Sieve.prototype.get = function(entry, pos){
   });
 
   // See if we already have the request cache
-  var result = helpers.fromCache(entry, true);
+  var result = helpers.fromCache(hash, true);
 
   if (result){
 
@@ -157,8 +157,6 @@ Sieve.prototype.get = function(entry, pos){
 };
 
 Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
-
-    console.log('COOKIE:' + cookie);
 
   if (entry.selector){
     try {
@@ -294,7 +292,8 @@ Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
       function finish(arr){
 
         // Store results in cache
-        helpers.toCache(entry, arr, true);
+        var hash = helpers.hash(entry);
+        helpers.toCache(hash, arr, true);
 
         this.hooks.onFinish(arr);
       }
