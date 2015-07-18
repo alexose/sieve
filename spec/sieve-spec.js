@@ -5,4 +5,4 @@ describe('init', function () {
     var sieve = new Sieve();
     expect(sieve).toBeTruthy();
   });
-})
+});

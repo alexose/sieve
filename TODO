@@ -1,0 +1,2 @@
+- Replace hooks with events (maybe with eventemitter?)
+- Some kind of queue or scheduler

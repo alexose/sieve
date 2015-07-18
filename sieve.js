@@ -34,272 +34,136 @@ Sieve.prototype.defaults = {
 
 Sieve.prototype.init = function(){
 
-  this
-    .initOptions()
-    .initHooks()
-    .initEntries()
-    .initResults();
-
-  return this;
-};
-
-Sieve.prototype.initOptions = function(){
-
   this.options = helpers.extend(
-      {},
-      this.defaults,
-      this.options
-    );
+    {},
+    this.defaults,
+    this.options
+  );
 
   return this;
 };
 
-Sieve.prototype.initHooks = function(){
-
-  var available = ['onStart', 'onIncrement', 'onError', 'onFinish']
-    , hooks     = this.options.hooks || {}
-    , result    = {}
-    , noop      = function(){};
-
-  available.forEach(function(d){
-    result[d] = hooks[d] || noop;
-  });
-
-  this.hooks = result;
-
-  return this;
-
-};
-
-Sieve.prototype.initEntries = function(){
-
-  var data = this.data;
-
-  if (!helpers.isObject(data)){
-
-    // Convert string to JSON
-    try {
-      data = JSON.parse(data);
-    } catch(e){
-      throw new Error('JSON error: ' + e.toString());
-    }
-  }
-
-  validate(data);
-
-  var entries = template(data);
-
-  if (helpers.isArray(entries)){
-
-    if (!entries.length){
-      this.error("Error: No results.");
-    }
-
-    this.entries = entries;
-  } else if (helpers.isObject(entries)){
-    this.entries = entries;
-  } else {
-    this.error("Error: No entry.");
-  }
-
-  return this;
-};
-
-Sieve.prototype.initResults = function(){
-
-  this.results = [];
-  this.expected = helpers.isArray(this.entries) ? this.entries.length : 1;
-
-  return this;
-};
-
-Sieve.prototype.run = function(entry, pos){
-
-  if (!this.entries){
-    return;
-  }
-
-  entry = entry || this.entries;
-  pos = pos || 0;
-
-  var options = this.options;
+// The main access point into Sieve.  Input can be a single entry or an array of entries.
+Sieve.prototype.get = function(entry, index, container){
 
   if (helpers.isArray(entry)){
-    entry.forEach(this.run.bind(this));
-  } else {
-    this.get(entry, pos);
+
+    // Create an empty array of equal length to the entry
+    var results = new Array(entry.length);
+
+    entry.forEach(function(d, i){
+      this.get(entry, i, results);
+    });
+
+    return this;
   }
+
+  var process = this.process.bind(this)
+    , finish = this.finish.bind(this);
+
+  fetch(entry, this.options, function accumulate(obj){
+
+    // Process raw results
+    process(obj, function(result){
+
+      if (container){
+
+        container[index] = result;
+
+        // If the container is full, then we're done!
+        if (container.indexOf(undefined) === -1){
+          finish(container);
+        }
+      } else {
+        finish(result);
+      }
+    });
+
+  }); 
 };
 
-Sieve.prototype.get = function(entry, pos){
+// Given successful results, do things with them
+Sieve.prototype.process = function(obj, cb){
 
-  var hash = helpers.hash(entry);
+  if (obj.success){
 
-  this.hooks.onStart({
-    hash : helpers.hash(entry)
-  });
+    // Run results through selector engine
+    if (entry.selector){
+      try {
+        select(obj, replace);
+      } catch(e){
 
-  // See if we already have the request cache
-  var result = helpers.fromCache(hash, true);
-
-  if (result){
-
-    if (entry.debug){
-      result.cached = 'result';
-    }
-
-    this.hooks.onFinish(result);
-  } else {
-
-    // Go fetch!
-    fetch(entry, pos, this.options, this.accumulate.bind(this));
-  }
-};
-
-Sieve.prototype.accumulate = function (entry, result, headers, cookie, pos){
-
-  if (entry.selector){
-    try {
-      select(result, entry.selector, entry.engine, selected.bind(this));
-    } catch(e){
-      this.error(e);
+        // Provide selector error message as feedback
+        result = 'ERROR: ' + e.toString();
+        process(replace);
+      }
+    } else {
+      replace(obj);
     }
   } else {
-    selected.call(this, result);
+    cb(obj);
   }
 
-  function selected(result){
+  // Experimental "replace" feature
+  function replace(obj){
 
-    var arr = this.results
-      , cb = add.bind(this);
-
-    // Experimental "replace" feature
     if (entry.replace){
-      result = replace(result, entry.replace);
+      // obj = replace(obj, entry.replace);
     }
+
+    then(obj);
+  }
+
+  // Handle "then" request
+  function then(obj){
+
+    var entry = obj.entry;
 
     if (entry.then){
 
-      var url = entry.then.url
-        , entries;
-
-      if (!url){
-        throw new Error('Specified a "then" command, but didn\'t provide a template or a URL.');
+      if (!entry.then.url){
+        throw new Error('Specified a "then" command, but didn\'t provide a URL.');
       }
 
-      // If we have a keyed array, we're going to use templating
-      if (helpers.isObject(result)){
+      // If our selector engine returned an object, it's templating time!
+      if (helpers.isObject(entry.result)){
         entry.then.data = result;
       }
 
-      // Experiemental response header support
-      if (entry.useHeaders){
-        helpers.extend(result, headers)
+      // Experimental response header support
+      if (entry.options.useHeaders){
+        helpers.extend(entry.result, obj.headers)
       }
 
       // Experimental cookie support
-      if (cookie){
+      if (obj.cookie){
         if (!entry.then.headers){
           entry.then.headers = {};
         }
 
-        entry.then.headers['Cookie'] = cookie;
+        entry.then.headers['Cookie'] = obj.cookie;
       }
 
-      // Define behaviors for sub-sieve
+      // Set options for sub-sieve
       var options = helpers.extend(true, {}, this.options);
-      options.hooks.onFinish = cb;
 
-      // Prevent onIncrement.  Recursion here would mean re-printing the data at each level.  No good!
-      this.options.hooks.onIncrement = function(){};
-
-      new Sieve(JSON.stringify(entry.then), options);
+      // Run sub-sieve
+      (new Sieve(options)).get(entry.then).bind('finish', function(evt, result){
+        cb(result);
+      });
 
     } else {
       cb(result);
     }
-
-    // Add result to array
-    function add(result){
-
-      var obj = {
-        result : result,
-        entry : entry,
-        pos : pos,
-        expected : this.expected
-      };
-
-      if (cookie){
-        obj.cookie = cookie;
-      }
-
-      var increment = this.hooks.onIncrement;
-
-      if (entry.debug){
-        increment(obj);
-      } else if (result) {
-
-        // Supress empty results
-        var response = {}
-          , lastprop
-          , props = 0;
-        if (helpers.isObject(result)){
-          for (var prop in result){
-            if (result[prop].length){
-              response[prop] = result[prop];
-              lastprop = prop;
-              props++;
-            }
-          }
-        } else {
-          props++;
-        }
-
-        if (props == 1 && lastprop){
-          increment(result[lastprop]);
-        } else if (props > 0){
-          increment(result);
-        }
-      }
-
-      arr.push(obj);
-
-      if (typeof(pos) === 'number'){
-
-        // Check to see if we've accumulated all the results we need
-        if (arr.length === this.expected){
-
-          // Re-order results array to match original request
-          arr.sort(function(a, b){
-            return a.pos > b.pos ? 1 : -1;
-          });
-
-          if (!entry.debug){
-            arr = arr.map(function(d){ return d.result; });
-          }
-
-          finish.call(this, arr);
-        }
-
-      } else {
-
-        // If pos is not a number, then we're dealing with a single request.
-        delete arr[0].pos;
-
-        finish.call(this, arr[0]);
-      }
-
-      function finish(arr){
-
-        // Store results in cache
-        var hash = helpers.hash(entry);
-        helpers.toCache(hash, arr, true);
-
-        this.hooks.onFinish(arr);
-      }
-    }
   }
 };
+
+// Finish the request and send it back
+Sieve.prototype.finish = function(result){
+  console.log('done');
+
+  // TODO: emit event
+}
 
 Sieve.prototype.error = function(e){
 

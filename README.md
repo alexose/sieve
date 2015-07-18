@@ -13,7 +13,7 @@ Installation
 Usage
 -----
 
-    var sieve = require('sievejs');
+    var sieve = new require('sievejs');
     
     var request = {
         "url": "https://api.github.com/repos/alexose/sieve/commits",
@@ -23,6 +23,12 @@ Usage
     sieve.get(request, function(result){
         console.log(result);  
     });
+
+
+Development
+-----------
+
+Tests can be run with jasmine.
 
 Documentation
 -------------
