@@ -9,8 +9,11 @@
     "type": "git",
     "url": "git@github.com:alexose/sieve.git"
   },
+  "scripts": {
+    "test": "mocha spec"
+  },
   "dependencies": {
-    "jasmine": "^2.2.1",
-    "memory-cache": "0.0.5"
+    "memory-cache": "0.0.5",
+    "mocha": "^3.5.0"
   }
 }

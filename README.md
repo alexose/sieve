@@ -28,7 +28,9 @@ Usage
 Development
 -----------
 
-Tests can be run with jasmine.
+Tests are run under Mocha:
+
+    npm test
 
 Documentation
 -------------
