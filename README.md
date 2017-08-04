@@ -13,7 +13,7 @@ Installation
 Usage
 -----
 
-    var sieve = new require('sievejs');
+    var sieve = require('sievejs');
     
     var request = {
         "url": "https://api.github.com/repos/alexose/sieve/commits",
