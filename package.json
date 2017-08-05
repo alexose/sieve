@@ -12,9 +12,12 @@
   "scripts": {
     "test": "mocha spec"
   },
-  "dependencies": {
-    "memory-cache": "0.0.5",
+  "devDependencies": {
     "mocha": "^3.5.0",
     "nock": "^9.0.14"
+  },
+  "dependencies": {
+    "memory-cache": "0.0.5",
+    "pubsub-js": "^1.5.7"
   }
 }

@@ -3,7 +3,7 @@ Sieve
 
 Try the [live demo](http://sieve.alexose.com)!
 
-Sieve makes any resource on the web available to your application.
+Sieve makes any resource on the web available to your application with minimal overhead, and zero extra dependencies.
 
 Installation
 ------------
