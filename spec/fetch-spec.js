@@ -15,7 +15,7 @@ describe('fetch', function(){
     it('should successfully GET a resource from an HTTP server', function(done){
       nock(url).get('/').reply(200, data);
 
-      fetch(entry, null, null, function(response){
+      fetch(entry, function(response){
         assert.equal(data, response.result);
         done();
       });
@@ -30,7 +30,7 @@ describe('fetch', function(){
       copy.method = 'POST';
       copy.body = JSON.stringify({ payload: data });
 
-      fetch(copy, null, null, function(response){
+      fetch(copy, function(response){
         var json = JSON.parse(response.result);
         assert.equal(data, json.payload);
         done();
@@ -44,7 +44,7 @@ describe('fetch', function(){
       var copy = Object.assign({}, entry);
       copy.url = replaced;
 
-      fetch(copy, null, null, function(response){
+      fetch(copy, function(response){
         assert.equal(data, response.result);
         done();
       });
@@ -61,7 +61,7 @@ describe('fetch', function(){
       copy.method = 'POST';
       copy.body = JSON.stringify({ payload: data });
 
-      fetch(copy, null, null, function(response){
+      fetch(copy, function(response){
         var json = JSON.parse(response.result);
         assert.equal(data, json.payload);
         done();

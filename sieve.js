@@ -26,16 +26,16 @@ module.exports = function sieve(entry, callback){
 
     var expected = entry.length;
     var results = new Array(expected);
-    var count = 0;
+    var pos = 0;
 
     entry.forEach(function(d,i){
-      var hash = queue.add(d);
+      var count = queue.add(d);
       
       // Listen for results
-      PubSub.subscribe('result.' + hash, function check(msg, data){
+      PubSub.subscribe('result.' + count, function check(msg, data){
         results[i] = data;
-        count += 1;
-        if (count === expected){
+        pos += 1;
+        if (pos === expected){
           callback(results);
         }
       });
