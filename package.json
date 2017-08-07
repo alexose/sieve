@@ -10,14 +10,17 @@
     "url": "git@github.com:alexose/sieve.git"
   },
   "scripts": {
-    "test": "mocha spec"
+    "test": "mocha spec spec/plugins"
   },
   "devDependencies": {
     "mocha": "^3.5.0",
     "nock": "^9.0.14"
   },
   "dependencies": {
+    "JSONSelect": "^0.4.0",
+    "jsdom": "^11.1.0",
     "memory-cache": "0.0.5",
-    "pubsub-js": "^1.5.7"
+    "pubsub-js": "^1.5.7",
+    "xpath": "0.0.24"
   }
 }

@@ -1,0 +1,5 @@
+module.exports = {
+  logging: 'verbose',
+  workers: 4,
+  wait_between_requests_to_same_host: 200
+};
