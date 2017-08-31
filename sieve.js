@@ -1,7 +1,6 @@
 var PubSub = require('pubsub-js');
 
 var template = require('./lib/template')
-  , validate = require('./lib/validate')
   , select   = require('./lib/select')
   , fetch    = require('./lib/fetch')
   , replace  = require('./lib/replace')
