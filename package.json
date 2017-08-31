@@ -18,7 +18,9 @@
   },
   "dependencies": {
     "JSONSelect": "^0.4.0",
+    "htmlparser2": "^3.9.2",
     "jsdom": "^11.1.0",
+    "libxmljs-dom": "0.0.8",
     "memory-cache": "0.0.5",
     "pubsub-js": "^1.5.7",
     "xpath": "0.0.24"

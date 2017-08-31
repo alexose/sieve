@@ -7,7 +7,8 @@ describe('xpath plugin tests', function() {
 
   it('should support a basic xpath query', function(done){
 
-    var selector = '//table/td[0]';
+    //var selector = '//table/td[0]/text()';
+    var selector = '//td/text()';
     var expected = 'hello';
 
     select(corpus, selector, 'xpath', function(result){
