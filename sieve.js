@@ -6,7 +6,6 @@ var template = require('./lib/template')
 
 var defaults = {
   headers: { "User-Agent": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)" },
-  port:    80,
   timeout: 10,
   method:  'GET',
   wait:    1, // Delay between scheduling batch requests

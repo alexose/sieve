@@ -24,8 +24,11 @@ describe('fetch', function(){
     it('should successfully handle 302 directs', function(done){
       var path = '/redirected';
 
-      nock(url).get('/').reply(302, undefined, { Location: path })
-      nock(url).get(path).reply(200, data);
+      nock(url)
+        .get('/')
+        .reply(302, undefined, { Location: url + path })
+        .get(path)
+        .reply(200, data);
 
       fetch(entry, function(response){
         assert.equal(data, response.result);
