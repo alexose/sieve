@@ -1,9 +1,6 @@
 var PubSub = require('pubsub-js');
 
 var template = require('./lib/template')
-  , select   = require('./lib/select')
-  , fetch    = require('./lib/fetch')
-  , replace  = require('./lib/replace')
   , helpers  = require('./lib/helpers')
   , queue    = require('./lib/queue');
 
@@ -18,8 +15,14 @@ var defaults = {
 };
 
 // The main access point into Sieve
-module.exports = function sieve(entry, callback){
-  
+module.exports = function sieve(entry, options){
+
+  entry = Object.assign(entry, defaults);
+
+  if (typeof options === 'function'){
+    var callback = options;
+  }
+
   // Input can be a single entry or an array of entries
   if (helpers.isArray(entry)){
 
@@ -29,13 +32,15 @@ module.exports = function sieve(entry, callback){
 
     entry.forEach(function(d,i){
       var count = queue.add(d);
-      
+
       // Listen for results
       PubSub.subscribe('result.' + count, function check(msg, data){
         results[i] = data;
         pos += 1;
         if (pos === expected){
-          callback(results);
+          if (callback) {
+            callback(results);
+          }
         }
       });
     });
@@ -43,7 +48,9 @@ module.exports = function sieve(entry, callback){
   } else {
     var hash = queue.add(entry);
     PubSub.subscribe('result.' + hash, function check(msg,data){
-      callback(data);
+      if (callback) {
+        callback(data);
+      }
     });
   }
 };
