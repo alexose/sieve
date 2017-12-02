@@ -12,7 +12,7 @@ describe('selector tests', function() {
     var regex = '/<b>(.*?)<\/b>/g';
     var expected = '<b>hello</b>';
 
-    select(corpus, regex, 'regex', function(result){
+    select(corpus, regex, 'regex', function(response){
       assert.equal(result, expected);
       done();
     });

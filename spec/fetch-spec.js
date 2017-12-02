@@ -20,6 +20,18 @@ describe('fetch', function(){
         done();
       });
     });
+    
+    it('should successfully handle 302 directs', function(done){
+      var path = '/redirected';
+
+      nock(url).get('/').reply(302, undefined, { Location: path })
+      nock(url).get(path).reply(200, data);
+
+      fetch(entry, function(response){
+        assert.equal(data, response.result);
+        done();
+      });
+    });
 
     it('should successfully POST data and retreive a resource from an HTTP server', function(done){
       nock(url).post('/').reply(200, function(uri, requestBody){
