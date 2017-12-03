@@ -83,4 +83,25 @@ describe('fetch', function(){
       });
     });
   });
+  
+  describe('advanced functions', function(){
+    it('should successfully fill a form', function(done){
+      nock(url).post('/').reply(200, function(uri, requestBody){
+        return requestBody;
+      });
+      
+      var copy = Object.assign({}, entry);
+      copy.form = {
+        field1: 'test1',
+        field2: 'test2'
+      }
+
+      var expected = 'field1=test1&field2=test2';
+
+      fetch(copy, function(response){
+        assert.equal(expected, response.result);
+        done();
+      }); 
+    });
+  });
 });
