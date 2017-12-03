@@ -7,6 +7,7 @@ var entry = {
 }
 
 var data = 'hello';
+var moreData = 'wow!';
 
 describe('sanity tests', function() {
 
@@ -25,6 +26,25 @@ describe('sanity tests', function() {
       result.forEach(function(d,i){
         assert.equal(data, d);
       });
+      done();
+    });
+  });
+});
+
+describe('advanced functionality', function() {
+
+  var copy = Object.assign({}, entry);
+  copy.then = { url: 'http://example.com/then' };
+
+  it('should support "then"', function(done){
+    nock(copy.url)
+      .get('/')
+      .reply(200, data)
+      .get('/then')
+      .reply(200, moreData); 
+
+    sieve(copy, function(result){
+      assert.equal(moreData, result);
       done();
     });
   });
