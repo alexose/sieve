@@ -52,14 +52,17 @@ describe('advanced functionality', function() {
 
   it('should preserve cookies between "then" requests', function(done){
     
+    var cookies = ['TEST1=12345', 'TEST2=67890'];
+
     nock(url)
       .post('/one')
-      .reply(200, undefined, { 'Set-Cookie': 'TEST1=12345' })
+      .reply(200, undefined, { 'Set-Cookie': cookies[0] })
       .get('/two')
-      .reply(200, undefined, { 'Set-Cookie': 'TEST2=67890' })
+      .reply(200, undefined, { 'Set-Cookie': cookies[1] })
       .get('/three')
       .reply(200, function(uri, requestBody){
-        console.log(this.req.headers);
+        assert.equal(cookies.join('; '), this.req.headers.cookie);
+        done();
       });
    
     entry = {
@@ -73,8 +76,6 @@ describe('advanced functionality', function() {
       }
     }
 
-    sieve(entry, function(response){
-        done();
-    }); 
+    sieve(entry, function(response){}); 
   });
 });
