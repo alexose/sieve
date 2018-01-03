@@ -14,12 +14,14 @@ var defaults = {
 };
 
 // The main access point into Sieve
-module.exports = function sieve(entry, options){
+module.exports = function sieve(_entry, options){
 
-  entry = Object.assign(entry, defaults);
+  var entry = JSON.parse(JSON.stringify(_entry));
 
   if (typeof options === 'function'){
-    var callback = options;
+    options = { onFinish: options }
+  } else if (typeof options === 'undefined'){
+    options = {};
   }
 
   // Input can be a single entry or an array of entries
@@ -30,26 +32,31 @@ module.exports = function sieve(entry, options){
     var pos = 0;
 
     entry.forEach(function(d,i){
-      var count = queue.add(d);
+  
+      d = helpers.extend({}, defaults, d);
+      var count = queue.add(d, options);
 
       // Listen for results
       PubSub.subscribe('result.' + count, function check(msg, data){
         results[i] = data;
         pos += 1;
         if (pos === expected){
-          if (callback) {
-            callback(results);
-          }
+          finish(entry, options, results);
         }
       });
     });
 
   } else {
-    var hash = queue.add(entry);
+    entry = helpers.extend({}, defaults, entry);
+    var hash = queue.add(entry, options);
     PubSub.subscribe('result.' + hash, function check(msg,data){
-      if (callback) {
-        callback(data);
-      }
+      finish(entry, options, data);
     });
   }
 };
+
+function finish(entry, options, results){
+  if (options.onFinish && !entry.then) {
+    options.onFinish(results);
+  }
+}
