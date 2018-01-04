@@ -78,4 +78,57 @@ describe('advanced functionality', function() {
 
     sieve(entry, function(response){}); 
   });
+
+  it('should allow another selector engine to be specified', function(done){
+
+    var expected = 'success',
+        json = { result: expected };
+
+    nock.cleanAll();
+
+    nock(url)
+      .get('/')
+      .reply(200, json);
+
+    entry = {
+      url: url,
+      engine: 'jsonselect',
+      selector: '.result'
+    }
+
+    sieve(entry, function(result){
+      assert.equal(result, expected);
+      done();
+    });
+  });
+
+  it('should support templating', function(done){
+    
+    var data = { key: 'template' },
+        success = 'success';
+    
+    nock.cleanAll();
+
+    nock(url)
+      .get('/')
+      .reply(200, data)
+      .get('/' + data.key)
+      .reply(200, success);
+
+    entry = {
+      url: url,
+      selector: {
+        result: '.key'
+      },
+      engine: 'jsonselect',
+      then: {
+        url: url + "/{{result}}" 
+      }
+    }
+    
+    sieve(entry, function(result){
+      assert.equal(success, result);
+      done();
+    });
+  });
 });

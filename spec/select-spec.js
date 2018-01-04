@@ -29,4 +29,23 @@ describe('selector tests', function() {
       done();
     });
   });
+  
+  it('should support multiple selectors, a.k.a., "sets"', function(done){
+
+    var corpus = '<html><body><b>hello</b><i>wow</i></body></html>';
+    var set = {
+      first: '/<b>(.*?)<\/b>/g',
+      second: '/<i>(.*?)<\/i>/g'
+    };
+    var expected = {
+      first: ["<b>hello</b>"],
+      second: ["<i>wow</i>"]
+    };
+
+    select(corpus, set, 'regex', function(result){
+      assert.deepEqual(result, expected);
+      done();
+    });
+  });
+  
 });
