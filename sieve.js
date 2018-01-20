@@ -23,6 +23,11 @@ module.exports = function sieve(_entry, options){
   } else if (typeof options === 'undefined'){
     options = {};
   }
+  
+  // Template data if necessary 
+  if (entry.data && typeof entry.data === 'object') {
+    entry = template(entry, entry.data);
+  }
 
   // Input can be a single entry or an array of entries
   if (helpers.isArray(entry)){

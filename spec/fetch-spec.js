@@ -104,5 +104,19 @@ describe('fetch', function(){
       }); 
     });
     
+    it('handle redirects with relative URLs', function(done){
+      var path = '/redirected';
+
+      nock(url)
+        .get('/')
+        .reply(302, undefined, { Location: path })
+        .get(path)
+        .reply(200, data);
+
+      fetch(entry, function(response){
+        assert.equal(data, response.result);
+        done();
+      });
+    });
   });
 });
