@@ -62,6 +62,6 @@ module.exports = function sieve(_entry, options){
 
 function finish(entry, options, results){
   if (options.onFinish && !entry.then) {
-    options.onFinish(results);
+    options.onFinish(results.result, results.response);
   }
 }
