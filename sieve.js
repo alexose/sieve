@@ -46,7 +46,13 @@ module.exports = function sieve(_entry, options){
         results[i] = data;
         pos += 1;
         if (pos === expected){
-          finish(entry, options, results);
+
+          // Merge arrays
+          var data = {
+            result: results.map(function(d){ return d.result }),
+            response: results.map(function(d) { return d.response })
+          };
+          finish(entry, options, data);
         }
       });
     });

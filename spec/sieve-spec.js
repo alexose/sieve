@@ -22,6 +22,7 @@ describe('sanity tests', function() {
     nock(entry.url).persist().get('/').reply(200, data); 
     var arr = [entry, entry, entry];
     sieve(arr, function(result){
+      console.log(result);
       result.forEach(function(d,i){
         assert.equal(data, d);
       });
