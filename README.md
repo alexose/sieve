@@ -1,4 +1,4 @@
-Sieve
+Sieve [![Build Status](https://travis-ci.com/alexose/sieve.svg?branch=master)]
 =====
 
 Try the [live demo](http://sieve.alexose.com)!
